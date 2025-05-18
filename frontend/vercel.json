@@ -1,0 +1,13 @@
+{
+    "rewrites": [
+        {
+            "source": "/(.*)",
+            "destination": "/index.html"
+        }
+    ],
+    "build": {
+        "env": {
+            "REACT_APP_API_URL": "https://YOURAPP-backend.vercel.app"
+        }
+    }
+}

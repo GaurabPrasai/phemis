@@ -21,12 +21,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-development-key-123'
+SECRET_KEY = config('SECRET_KEY', default='django-insecure-development-key-123')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default=True, cast=bool)
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '.vercel.app', '*']
 
 
 # Application definition
@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'movies',
+    'recommender_api',
 ]
 
 MIDDLEWARE = [
@@ -56,6 +57,7 @@ MIDDLEWARE = [
 
 # CORS Configuration
 CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='http://localhost:3000,https://movie-recommender-frontend.vercel.app', cast=lambda v: [s.strip() for s in v.split(',')])
 
 ROOT_URLCONF = 'movie_recommender_project.urls'
 
@@ -132,7 +134,10 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # TMDB API Configuration
-TMDB_API_KEY = '420b8821330cec3f214163c75423281c'
+TMDB_API_KEY = config('TMDB_API_KEY', default='420b8821330cec3f214163c75423281c')
+
+# HuggingFace Configuration
+HUGGINGFACE_TOKEN = config('HUGGINGFACE_TOKEN', default='')
 
 # AWS S3 Configuration
 AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID', default='')

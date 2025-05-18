@@ -6,4 +6,5 @@ requests==2.31.0
 numpy==1.26.4
 pandas==2.2.0
 scikit-learn==1.4.0
-python-decouple==3.8 
+python-decouple==3.8
+huggingface_hub==0.20.3 

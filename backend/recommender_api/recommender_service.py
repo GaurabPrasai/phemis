@@ -5,6 +5,10 @@ import requests
 from functools import lru_cache
 from django.conf import settings
 from pathlib import Path
+import tempfile
+
+# Add HuggingFace imports
+from huggingface_hub import hf_hub_download
 
 class MovieRecommender:
     def __init__(self):
@@ -13,13 +17,27 @@ class MovieRecommender:
         self.load_models()
     
     def load_models(self):
-        """Load the movies DataFrame and similarity matrix"""
+        """Load the movies DataFrame and similarity matrix from HuggingFace"""
         try:
-            # Get the current directory path
-            base_dir = Path(__file__).resolve().parent
+            # Create a cache directory
+            cache_dir = os.path.join(tempfile.gettempdir(), "movie_recommender_models")
+            os.makedirs(cache_dir, exist_ok=True)
+            
+            # Download models from HuggingFace
+            movies_path = hf_hub_download(
+                repo_id="GaurabPrasai/movie", 
+                filename="movies.pkl",
+                cache_dir=cache_dir
+            )
+            
+            similarity_path = hf_hub_download(
+                repo_id="GaurabPrasai/movie", 
+                filename="similarity.pkl",
+                cache_dir=cache_dir
+            )
             
             # Load movies data
-            with open(os.path.join(base_dir, 'movies.pkl'), 'rb') as file:
+            with open(movies_path, 'rb') as file:
                 movies_list = pickle.load(file)
                 
             if isinstance(movies_list, pd.DataFrame):
@@ -28,13 +46,34 @@ class MovieRecommender:
                 self.movies = pd.DataFrame(movies_list)
                 
             # Load similarity matrix
-            with open(os.path.join(base_dir, 'similarity.pkl'), 'rb') as file:
+            with open(similarity_path, 'rb') as file:
                 self.similarity = pickle.load(file)
                 
             return True
         except Exception as e:
             print(f"Error loading models: {str(e)}")
-            return False
+            # Fallback to local files if HuggingFace download fails
+            try:
+                # Get the current directory path
+                base_dir = Path(__file__).resolve().parent
+                
+                # Load movies data
+                with open(os.path.join(base_dir, 'movies.pkl'), 'rb') as file:
+                    movies_list = pickle.load(file)
+                    
+                if isinstance(movies_list, pd.DataFrame):
+                    self.movies = movies_list
+                else:
+                    self.movies = pd.DataFrame(movies_list)
+                    
+                # Load similarity matrix
+                with open(os.path.join(base_dir, 'similarity.pkl'), 'rb') as file:
+                    self.similarity = pickle.load(file)
+                    
+                return True
+            except Exception as inner_e:
+                print(f"Error loading local models: {str(inner_e)}")
+                return False
     
     def get_all_movies(self):
         """Return list of all movies titles sorted alphabetically"""

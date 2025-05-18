@@ -1,19 +1,14 @@
 {
-    "builds": [
-        {
-            "src": "movie_recommender_project/wsgi.py",
-            "use": "@vercel/python"
+    "functions": {
+        "movie_recommender_project/wsgi.py": {
+            "runtime": "@vercel/python",
+            "excludeFiles": "/recommender_api/similarity.pkl"
         }
-    ],
+    },
     "routes": [
         {
             "src": "/(.*)",
             "dest": "movie_recommender_project/wsgi.py"
         }
-    ],
-    "functions": {
-        "movie_recommender_project/wsgi.py": {
-            "excludeFiles": "/recommender_api/similarity.pkl"
-        }
-    }
+    ]
 }

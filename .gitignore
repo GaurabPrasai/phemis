@@ -19,7 +19,6 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
-<<<<<<< HEAD
 backend/venv/
 
 # Node
@@ -32,35 +31,6 @@ yarn-error.log
 .env.development.local
 .env.test.local
 .env.production.local
-=======
-
-# Django
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-
-# Virtual Environment
-venv/
-django_env/
-env/
-ENV/
-
-# React
-node_modules/
-/react_frontend/build
-/react_frontend/.env
-/react_frontend/.env.local
-/react_frontend/.env.development.local
-/react_frontend/.env.test.local
-/react_frontend/.env.production.local
-/react_frontend/npm-debug.log*
-/react_frontend/yarn-debug.log*
-/react_frontend/yarn-error.log*
-
-# Environment variables
-.env
->>>>>>> fe69cb750f3bb64ec0ee54afc19f00be342cdac5
 
 # IDE
 .idea/
@@ -68,12 +38,6 @@ node_modules/
 *.swp
 *.swo
 
-<<<<<<< HEAD
 # OS
 .DS_Store
-Thumbs.db 
-=======
-# OS specific
-.DS_Store
 Thumbs.db
->>>>>>> fe69cb750f3bb64ec0ee54afc19f00be342cdac5

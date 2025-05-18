@@ -1,58 +1,36 @@
-# Movie Recommender Django Backend
+# Movie Recommender Backend
 
-This is the backend API for the Movie Recommender System. It uses Django and Django REST Framework to provide recommendation functionality.
+This is the backend service for the Movie Recommender project, built with Django REST framework.
 
-## Setup
+## Vercel Deployment Notes
 
-1. Create a virtual environment:
+### Handling Large Pickle Files
 
-```bash
-python -m venv env
-```
+This project uses large machine learning model files (`.pkl` files) which exceed Vercel's serverless function size limits. To handle this:
 
-2. Activate the virtual environment:
+1. The large model files are hosted on HuggingFace: https://huggingface.co/GaurabPrasai/movie
+2. We exclude these files from being uploaded to Vercel using:
+   - A `.vercelignore` file that excludes all `.pkl` files
+   - The `functions` property in `vercel.json` that explicitly excludes PKL files
 
-- Windows:
+### Runtime Model Loading
 
-```
-.\env\Scripts\activate
-```
+During runtime, the application:
 
-- Linux/Mac:
+1. Downloads models from HuggingFace using the `huggingface_hub` package
+2. Stores them in a temporary cache directory
+3. Falls back to local files only if HuggingFace download fails
 
-```
-source env/bin/activate
-```
+## Environment Variables
 
-3. Install dependencies:
+Make sure to set these environment variables in your Vercel project:
 
-```
-pip install -r requirements.txt
-```
-
-4. Setup environment variables:
-   Create a `.env` file in the project root and add:
-
-```
-API_KEY=your_tmdb_api_key_here
-```
-
-5. Run the development server:
-
-```
-python manage.py runserver
-```
+- `SECRET_KEY`: Django secret key
+- `DEBUG`: Set to "False" for production
+- `TMDB_API_KEY`: Your TMDB API key for movie posters
+- `HUGGINGFACE_TOKEN`: Your HuggingFace token if the repository is private
 
 ## API Endpoints
 
-- `GET /api/health/`: Health check endpoint
-- `GET /api/movies/`: Get list of all available movies
-- `POST /api/recommend/`: Get movie recommendations
-
-  Request body:
-
-  ```json
-  {
-    "movie_title": "Movie Title"
-  }
-  ```
+- `/api/movies/`: Get a list of all movie titles
+- `/api/recommend/`: Get movie recommendations based on a given movie title

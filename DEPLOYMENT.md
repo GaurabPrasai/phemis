@@ -73,3 +73,15 @@ If the recommender doesn't work:
 ## Continuous Deployment
 
 Both your frontend and backend are now set up for continuous deployment. Any changes pushed to your GitHub repository will trigger automatic redeployment.
+
+# Ignore large pickle files
+
+_.pkl
+recommender_api/_.pkl
+
+# Ignore virtual environments
+
+venv/
+.venv/
+**pycache**/
+\*.pyc

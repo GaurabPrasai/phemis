@@ -18,64 +18,13 @@ class MovieRecommender:
             # Get the base directory (project root)
             base_dir = Path(settings.BASE_DIR).parent
             
-<<<<<<< HEAD
-            # Print paths for debugging
-            print(f"Looking for files in: {base_dir}")
-            print(f"Directory exists: {os.path.exists(base_dir)}")
-            
             # Load movies data
-            movies_path = os.path.join(str(base_dir), 'movies.pkl')
-            print(f"Movies path: {movies_path}")
-            print(f"Movies file exists: {os.path.exists(movies_path)}")
-            
-            if os.path.exists(movies_path):
-                print("Loading movies.pkl...")
-                with open(movies_path, 'rb') as file:
-                    movies_list = pickle.load(file)
-                print("movies.pkl loaded successfully")
-            else:
-                print("movies.pkl not found!")
-                return False
-            
-            # Load similarity matrix
-            similarity_path = os.path.join(str(base_dir), 'similarity.pkl')
-            print(f"Similarity path: {similarity_path}")
-            print(f"Similarity file exists: {os.path.exists(similarity_path)}")
-            
-            if os.path.exists(similarity_path):
-                print("Loading similarity.pkl...")
-                with open(similarity_path, 'rb') as file:
-                    self.similarity = pickle.load(file)
-                print("similarity.pkl loaded successfully")
-            else:
-                print("similarity.pkl not found!")
-                return False
-            
-            if isinstance(movies_list, pd.DataFrame):
-                self.movies = movies_list
-                print("movies_list is already a DataFrame")
-            else:
-                print("Converting movies_list to DataFrame")
-                self.movies = pd.DataFrame(movies_list)
-            
-            print(f"DataFrame shape: {self.movies.shape}")
-            print(f"DataFrame columns: {self.movies.columns.tolist()}")
-            print("Successfully loaded both files!")
-            return True
-        except Exception as e:
-            print(f"Error loading models: {str(e)}")
-            print(f"Error type: {type(e)}")
-            # Print current directory for debugging
-            print(f"Current directory: {os.getcwd()}")
-            print(f"Directory contents: {os.listdir(base_dir)}")
-=======
-            # Load movies data
-            movies_path = os.path.join(base_dir, 'movies.pkl')
+            movies_path = os.path.join(base_dir, 'backend/recommender_api/movies.pkl')
             with open(movies_path, 'rb') as file:
                 movies_list = pickle.load(file)
             
             # Load similarity matrix
-            similarity_path = os.path.join(base_dir, 'similarity.pkl')
+            similarity_path = os.path.join(base_dir, 'backend/recommender_api/similarity.pkl')
             with open(similarity_path, 'rb') as file:
                 self.similarity = pickle.load(file)
             
@@ -87,7 +36,6 @@ class MovieRecommender:
             return True
         except Exception as e:
             print(f"Error loading models: {str(e)}")
->>>>>>> fe69cb750f3bb64ec0ee54afc19f00be342cdac5
             return False
     
     def get_all_movies(self):

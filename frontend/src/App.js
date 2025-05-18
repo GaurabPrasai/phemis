@@ -1,9 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-<<<<<<< HEAD
 import axios from './axiosConfig';
-=======
-import axios from 'axios';
->>>>>>> fe69cb750f3bb64ec0ee54afc19f00be342cdac5
 import './App.css';
 
 function App() {

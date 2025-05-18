@@ -21,17 +21,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-<<<<<<< HEAD
 SECRET_KEY = 'django-insecure-development-key-123'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-=======
-SECRET_KEY = config('DJANGO_SECRET_KEY', default='your-secret-key-here')
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG', default=False, cast=bool)
->>>>>>> fe69cb750f3bb64ec0ee54afc19f00be342cdac5
 
 ALLOWED_HOSTS = ['*']
 
@@ -139,11 +132,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # TMDB API Configuration
-<<<<<<< HEAD
 TMDB_API_KEY = '420b8821330cec3f214163c75423281c'
-=======
-TMDB_API_KEY = config('TMDB_API_KEY', default='420b8821330cec3f214163c75423281c')
->>>>>>> fe69cb750f3bb64ec0ee54afc19f00be342cdac5
 
 # AWS S3 Configuration
 AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID', default='')

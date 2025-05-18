@@ -1,0 +1,13 @@
+django==5.0.2
+djangorestframework==3.14.0
+django-cors-headers==4.3.1
+python-dotenv==1.0.1
+requests==2.31.0
+numpy==1.26.4
+pandas==2.2.0
+scikit-learn==1.4.0
+<<<<<<< HEAD
+=======
+supabase-py==2.3.4
+>>>>>>> fe69cb750f3bb64ec0ee54afc19f00be342cdac5
+python-decouple==3.8 

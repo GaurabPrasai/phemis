@@ -1,0 +1,312 @@
+/* Modern color scheme and variables */
+:root {
+    --primary-color: #2c3e50;
+    --accent-color: #e74c3c;
+    --background-color: #f8f9fa;
+    --card-background: #ffffff;
+    --text-primary: #2c3e50;
+    --text-secondary: #7f8c8d;
+    --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --transition: all 0.3s ease;
+}
+
+body {
+    background-color: var(--background-color);
+    color: var(--text-primary);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Header Styles */
+.app-header {
+    background: linear-gradient(135deg, var(--primary-color), #34495e);
+    padding: 3rem 0;
+    margin-bottom: 3rem;
+    color: white;
+    transform: skewY(-2deg);
+    transform-origin: top left;
+}
+
+.app-header .content {
+    transform: skewY(2deg);
+}
+
+.app-header h1 {
+    font-weight: 800;
+    letter-spacing: -1px;
+    margin-bottom: 0.5rem;
+}
+
+.app-header p {
+    opacity: 0.9;
+    font-size: 1.2rem;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Selection Card Styles */
+.selection-card {
+    background: var(--card-background);
+    border-radius: 15px;
+    border: none;
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+}
+
+.selection-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Select Input Styling */
+.movie-select {
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    padding: 12px;
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+.movie-select:hover,
+.movie-select:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
+}
+
+/* Button Styling */
+.recommend-btn {
+    background: var(--accent-color);
+    border: none;
+    border-radius: 10px;
+    padding: 12px 24px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    transition: var(--transition);
+}
+
+.recommend-btn:hover:not(:disabled) {
+    background: #d44637;
+    transform: translateY(-2px);
+}
+
+.recommend-btn:disabled {
+    background: #bdc3c7;
+}
+
+/* Loading Animation */
+.loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    margin-right: 8px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Movie Cards Grid */
+.recommendations-section {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 0.5s ease forwards;
+}
+
+@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.movie-card {
+    border: none;
+    border-radius: 15px;
+    overflow: hidden;
+    transition: var(--transition);
+    box-shadow: var(--shadow);
+}
+
+.movie-card:hover {
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.movie-card img {
+    height: 300px;
+    object-fit: cover;
+    transition: var(--transition);
+}
+
+.movie-card:hover img {
+    transform: scale(1.05);
+}
+
+.movie-card .card-body {
+    padding: 1.25rem;
+    background: var(--card-background);
+}
+
+.movie-card .card-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--text-primary);
+}
+
+/* Error Alert Styling */
+.error-alert {
+    background: #fff5f5;
+    border: 1px solid #fed7d7;
+    border-radius: 10px;
+    color: #c53030;
+    padding: 1rem;
+    margin: 1rem 0;
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    25% {
+        transform: translateX(-5px);
+    }
+
+    75% {
+        transform: translateX(5px);
+    }
+}
+
+/* Footer Styling */
+.app-footer {
+    margin-top: 4rem;
+    padding: 2rem 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.app-footer p {
+    margin: 0;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .app-header {
+        padding: 2rem 0;
+    }
+
+    .app-header h1 {
+        font-size: 2rem;
+    }
+
+    .movie-card img {
+        height: 250px;
+    }
+
+    .recommendations-grid {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    }
+}
+
+/* Search Select Styling */
+.search-select-container {
+    position: relative;
+}
+
+.movie-search-input {
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    padding: 12px;
+    transition: var(--transition);
+    font-size: 1rem;
+    width: 100%;
+}
+
+.movie-search-input:hover,
+.movie-search-input:focus {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(231, 76, 60, 0.1);
+    outline: none;
+}
+
+.movie-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    margin-top: 5px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 1000;
+    animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.suggestion-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.suggestion-item:hover,
+.suggestion-item.selected {
+    background-color: rgba(231, 76, 60, 0.1);
+    color: var(--accent-color);
+}
+
+.suggestion-item:not(:last-child) {
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.suggestion-item.no-results {
+    color: var(--text-secondary);
+    font-style: italic;
+    cursor: default;
+}
+
+.suggestion-item.no-results:hover {
+    background-color: transparent;
+    color: var(--text-secondary);
+}
+
+/* Custom Scrollbar for Suggestions */
+.movie-suggestions::-webkit-scrollbar {
+    width: 8px;
+}
+
+.movie-suggestions::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.movie-suggestions::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+.movie-suggestions::-webkit-scrollbar-thumb:hover {
+    background: #a1a1a1;
+}

@@ -20,7 +20,9 @@
         "start": "react-scripts start",
         "build": "react-scripts build",
         "test": "react-scripts test",
-        "eject": "react-scripts eject"
+        "eject": "react-scripts eject",
+        "predeploy": "npm run build",
+        "deploy": "cross-env GIT_CLONE_PROTECTION_ACTIVE=false npx gh-pages -d build"
     },
     "eslintConfig": {
         "extends": [
@@ -43,5 +45,9 @@
     "proxy": "https://your-backend-url.vercel.app",
     "overrides": {
         "nth-check": "^2.1.1"
+    },
+    "homepage": "https://gaurabprasai.github.io/phemis/",
+    "devDependencies": {
+        "cross-env": "^7.0.3"
     }
 }

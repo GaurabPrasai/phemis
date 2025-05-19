@@ -1,12 +1,12 @@
-# Fikson: A Movie Recommendation System
+# Phemis: A Movie Recommendation System
 
-Fikson is a machine learning-powered movie recommendation system designed to provide users with personalized movie suggestions based on their preferences. By utilizing advanced content-based filtering techniques and state-of-the-art tools, Fikson ensures precise and relevant recommendations through a seamless and interactive interface.
+Phemis is a machine learning-powered movie recommendation system designed to provide users with personalized movie suggestions based on their preferences. By utilizing advanced content-based filtering techniques and state-of-the-art tools, Phemis ensures precise and relevant recommendations through a seamless and interactive interface.
 
 ## System Architecture
 
 ### 1. Machine Learning Model
 
-Fikson employs a **content-based filtering algorithm** that analyzes features such as genres, directors, actors, and plot summaries. Using **TF-IDF vectorization**, these features are transformed into numerical vectors, enabling precise similarity calculations via **cosine similarity**. This ensures the model identifies movies that closely match user preferences.
+Phemis employs a **content-based filtering algorithm** that analyzes features such as genres, directors, actors, and plot summaries. Using **TF-IDF vectorization**, these features are transformed into numerical vectors, enabling precise similarity calculations via **cosine similarity**. This ensures the model identifies movies that closely match user preferences.
 
 ### 2. Web Application
 
@@ -105,4 +105,4 @@ For questions, feedback, or collaboration opportunities:
 
 ---
 
-Fikson demonstrates the potential of combining machine learning with web technologies to solve real-world problems. Explore the project, and feel free to contribute or adapt it to your needs!
+Phemis demonstrates the potential of combining machine learning with web technologies to solve real-world problems. Explore the project, and feel free to contribute or adapt it to your needs!

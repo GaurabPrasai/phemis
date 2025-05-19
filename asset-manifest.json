@@ -1,13 +1,13 @@
 {
   "files": {
     "main.css": "/phemis/static/css/main.ce2c8c21.css",
-    "main.js": "/phemis/static/js/main.fef58b9f.js",
+    "main.js": "/phemis/static/js/main.89a84f0f.js",
     "index.html": "/phemis/index.html",
     "main.ce2c8c21.css.map": "/phemis/static/css/main.ce2c8c21.css.map",
-    "main.fef58b9f.js.map": "/phemis/static/js/main.fef58b9f.js.map"
+    "main.89a84f0f.js.map": "/phemis/static/js/main.89a84f0f.js.map"
   },
   "entrypoints": [
     "static/css/main.ce2c8c21.css",
-    "static/js/main.fef58b9f.js"
+    "static/js/main.89a84f0f.js"
   ]
 }

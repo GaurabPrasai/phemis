@@ -1,10 +1,20 @@
+# Core web framework dependencies
 django==5.0.2
 djangorestframework==3.14.0
 django-cors-headers==4.3.1
-python-dotenv==1.0.1
+
+# HTTP client for API requests
 requests==2.31.0
+
+# Data processing and ML (minimal installations)
 numpy==1.26.4
-pandas==2.2.0
+pandas[minimal]==2.2.0
 scikit-learn==1.4.0
-python-decouple==3.8
-huggingface_hub==0.20.3 
+
+# Model management
+huggingface_hub==0.20.3
+
+# Note: All dependencies are essential for core functionality
+# - pandas: Used with minimal installation to reduce package size
+# - scikit-learn: Required for similarity calculations
+# - huggingface_hub: Used for model downloading

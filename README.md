@@ -31,7 +31,7 @@ The trained machine learning model is serialized using **Pickle**, ensuring fast
 
 ### Prerequisites
 
-- Python 3.8+
+- Python 3.9+ (recommended 3.10 or 3.11)
 - Node.js 14+
 - TMDB API key
 

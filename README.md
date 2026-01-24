@@ -70,6 +70,8 @@ The project uses Git LFS to manage large model files (`.pkl` files). Before clon
 
    This will download all `.pkl` model files tracked by Git LFS.
 
+   > **If this command doesn't change your pkl pointers to binary files, [checkout here. ](./docs/LFS.md)**
+
 ### Backend Setup
 
 1. Navigate to the Django backend directory:

@@ -1,3 +1,5 @@
 .vercel
 *.sqlite
 *.sqlite3
+
+recommender_api/*.pkl 

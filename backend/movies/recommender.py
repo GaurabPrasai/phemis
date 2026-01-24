@@ -16,13 +16,14 @@ class MovieRecommender:
     def load_models(self):
         """Load the movies DataFrame and similarity matrix from local files"""
         try:
-            # Get the base directory (project root)
-            base_dir = Path(settings.BASE_DIR).parent
+            base_dir = Path(settings.BASE_DIR)
 
             # Load movies data
             movies_path = os.path.join(base_dir, "recommender_api/movies.pkl")
+            print(f"______________Loading movies from: {movies_path}")
             with open(movies_path, "rb") as file:
                 movies_list = pickle.load(file)
+            print(f"______________Loaded {len(movies_list)} movies.")
 
             # Load similarity matrix
             similarity_path = os.path.join(base_dir, "recommender_api/similarity.pkl")
@@ -33,17 +34,16 @@ class MovieRecommender:
                 self.movies = movies_list
             else:
                 self.movies = pd.DataFrame(movies_list)
-
-            return True
         except Exception as e:
             print(f"Error loading models: {str(e)}")
             return False
 
     def get_all_movies(self):
         """Return list of all movies titles sorted alphabetically"""
-        if self.movies is not None:
-            return self.movies["title"].sort_values().tolist()
-        return []
+        print("Fetching all movie titles...")
+        if self.movies is None:
+            return []
+        return self.movies["title"].sort_values().tolist()
 
     @lru_cache(maxsize=1000)
     def fetch_poster(self, movie_id):

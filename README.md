@@ -18,7 +18,7 @@ The application is built using a modern tech stack:
 
 ### 3. Model Serialization
 
-The trained machine learning model is serialized using **Pickle**, ensuring fast and efficient deployment.
+The trained machine learning model is serialized using **Pickle**, ensuring fast and efficient deployment. Large model files are managed using **Git LFS** for efficient version control.
 
 ## Features
 
@@ -33,30 +33,82 @@ The trained machine learning model is serialized using **Pickle**, ensuring fast
 
 - Python 3.9+ (recommended 3.10 or 3.11)
 - Node.js 14+
+- Git with Git LFS installed
 - TMDB API key
+
+### Git LFS Setup
+
+The project uses Git LFS to manage large model files (`.pkl` files). Before cloning the repository, ensure Git LFS is installed:
+
+1. **Install Git LFS**:
+   - **Windows**: Download from [git-lfs.github.com](https://git-lfs.github.com) or use `winget install -e --id GitHub.GitLFS`
+   - **Mac**: `brew install git-lfs`
+   - **Linux**:
+     ```bash
+     sudo apt-get install git-lfs  # Debian/Ubuntu
+     sudo yum install git-lfs      # CentOS/RHEL
+     ```
+
+2. **Initialize Git LFS**:
+
+   ```bash
+   git lfs install
+   ```
+
+3. **Clone the repository**:
+
+   ```bash
+   git clone https://github.com/gaurabprasai/phemis.git
+   cd phemis
+   ```
+
+4. **Pull LFS files** (if not automatically pulled):
+
+   ```bash
+   git lfs pull
+   ```
+
+   This will download all `.pkl` model files tracked by Git LFS.
+
+   > **If this command doesn't change your pkl pointers to binary files, [checkout here. ](./docs/LFS.md)**
 
 ### Backend Setup
 
 1. Navigate to the Django backend directory:
+
    ```bash
    cd django_backend
    ```
+
 2. Create a virtual environment:
+
    ```bash
    python -m venv env
    ```
+
 3. Activate the virtual environment:
    - Windows: `.\env\Scripts\activate`
    - Linux/Mac: `source env/bin/activate`
+
 4. Install dependencies:
+
    ```bash
    pip install -r requirements.txt
    ```
+
 5. Create a `.env` file with your TMDB API key:
+
    ```
    API_KEY=your_tmdb_api_key_here
    ```
-6. Run the development server:
+
+6. Verify that the model files are present:
+
+   ```bash
+   ls -lh *.pkl  # Should show the actual file sizes, not small pointer files
+   ```
+
+7. Run the development server:
    ```bash
    python manage.py runserver
    ```
@@ -64,13 +116,17 @@ The trained machine learning model is serialized using **Pickle**, ensuring fast
 ### Frontend Setup
 
 1. Navigate to the React frontend directory:
+
    ```bash
    cd react_frontend
    ```
+
 2. Install dependencies:
+
    ```bash
    npm install
    ```
+
 3. Start the development server:
    ```bash
    npm start
@@ -81,6 +137,25 @@ The trained machine learning model is serialized using **Pickle**, ensuring fast
 - `GET /api/health/`: Health check endpoint
 - `GET /api/movies/`: Get list of all available movies
 - `POST /api/recommend/`: Get movie recommendations
+
+## Troubleshooting
+
+### Git LFS Issues
+
+If model files appear as small text files (pointer files) instead of actual binary files:
+
+1. Ensure Git LFS is installed: `git lfs version`
+2. Re-initialize LFS: `git lfs install`
+3. Pull LFS objects: `git lfs pull`
+4. Verify tracking: `git lfs ls-files`
+
+### Model Loading Errors
+
+If you encounter errors loading `.pkl` files, verify:
+
+- Files were properly downloaded via Git LFS (check file size)
+- Python version compatibility
+- All dependencies are installed
 
 ## Future Roadmap
 
@@ -93,6 +168,7 @@ The trained machine learning model is serialized using **Pickle**, ensuring fast
 We welcome contributions! To get started:
 
 - Fork the repository.
+- Ensure Git LFS is installed before cloning.
 - Create a feature branch.
 - Submit a pull request with detailed documentation of changes.
 

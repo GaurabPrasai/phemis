@@ -13,7 +13,7 @@ Phemis employs a **content-based filtering algorithm** that analyzes features su
 The application is built using a modern tech stack:
 
 - **Backend**: Django REST Framework API
-- **Frontend**: React with Bootstrap
+- **Frontend**: React (Create React App) with hand-written CSS
 - **Data Processing**: Pandas and NumPy
 
 ### 3. Model Serialization
@@ -77,7 +77,7 @@ The project uses Git LFS to manage large model files (`.pkl` files). Before clon
 1. Navigate to the Django backend directory:
 
    ```bash
-   cd django_backend
+   cd backend
    ```
 
 2. Create a virtual environment:
@@ -99,7 +99,7 @@ The project uses Git LFS to manage large model files (`.pkl` files). Before clon
 5. Create a `.env` file with your TMDB API key:
 
    ```
-   API_KEY=your_tmdb_api_key_here
+   TMDB_API_KEY=your_tmdb_api_key_here
    ```
 
 6. Verify that the model files are present:
@@ -118,7 +118,7 @@ The project uses Git LFS to manage large model files (`.pkl` files). Before clon
 1. Navigate to the React frontend directory:
 
    ```bash
-   cd react_frontend
+   cd frontend
    ```
 
 2. Install dependencies:
@@ -136,7 +136,43 @@ The project uses Git LFS to manage large model files (`.pkl` files). Before clon
 
 - `GET /api/health/`: Health check endpoint
 - `GET /api/movies/`: Get list of all available movies
-- `POST /api/recommend/`: Get movie recommendations
+- `POST /api/recommend/`: Get movies similar to a title you already like
+- `GET /api/moods/`: List the mood tiles (slug, label, emoji, blurb)
+- `POST /api/recommend/mood/`: Get movies for a mood (see below)
+
+## Mood recommendations
+
+The home screen asks how you feel and ranks the catalog with plain numpy - no LLM and no TMDB call at request time.
+
+- **Profiles** live in `backend/movies/moods.py`: genre weights, genres to avoid, and keywords. Energy (`chill` / `balanced` / `intense`) and company (`alone` / `partner` / `friends` / `family`) adjust those weights. Watching with family is a hard filter: Family or Animation only, and no Horror, Thriller, Crime or War.
+- **Metadata** (genres, runtime, rating, poster path, overview, keywords) is fetched once into `backend/recommender_api/movie_meta.json` and loaded at startup. Posters come from that file, so requests no longer call TMDB.
+- **Score** = 0.55 x genre match + 0.15 x keyword hits + 0.30 x Bayesian rating - 0.5 for an avoided genre. With a seed movie the final score is `0.65 x mood + 0.35 x similarity`.
+- **Shuffle** samples 10 films from the top 30 candidates, excluding titles already shown, so it never repeats.
+
+Rebuild the metadata only when the catalog changes:
+
+```bash
+cd backend
+TMDB_API_KEY=your_key python scripts/build_movie_meta.py
+```
+
+The script is resumable and skips ids it already has.
+
+`POST /api/recommend/mood/` accepts:
+
+```json
+{
+  "mood": "cry",
+  "energy": "chill",
+  "company": "alone",
+  "max_runtime": 120,
+  "seed_movie": "Titanic",
+  "exclude": ["Doctor Zhivago"],
+  "limit": 10
+}
+```
+
+Only `mood` is required; unknown moods return 400.
 
 ## Troubleshooting
 

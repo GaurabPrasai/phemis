@@ -1,6 +1,6 @@
 {
-    "short_name": "Movie Recommender",
-    "name": "Fikson Movie Recommender",
+    "short_name": "Phemis",
+    "name": "Phemis - movies by mood",
     "icons": [
         {
             "src": "favicon.ico",
@@ -10,6 +10,6 @@
     ],
     "start_url": ".",
     "display": "standalone",
-    "theme_color": "#000000",
-    "background_color": "#ffffff"
+    "theme_color": "#0b0d14",
+    "background_color": "#0b0d14"
 }

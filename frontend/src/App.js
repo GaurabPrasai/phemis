@@ -1,207 +1,358 @@
-import React, { useState, useEffect, useRef } from "react";
-import axios from "./axiosConfig";
-import "./App.css";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  describeError,
+  getMoods,
+  getMovies,
+  recommendMood,
+  recommendSimilar,
+} from "./api";
+import Header from "./components/Header";
+import MoodPicker from "./components/MoodPicker";
+import MovieModal from "./components/MovieModal";
+import MovieSearch from "./components/MovieSearch";
+import RefineBar from "./components/RefineBar";
+import ResultsGrid from "./components/ResultsGrid";
+import Watchlist from "./components/Watchlist";
+import useWatchlist from "./hooks/useWatchlist";
+
+const initial = new URLSearchParams(window.location.search);
+
+function scrollTo(ref) {
+  const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+  ref.current?.scrollIntoView({
+    behavior: reduceMotion ? "auto" : "smooth",
+    block: "start",
+  });
+}
 
 function App() {
+  const [tab, setTab] = useState(
+    initial.get("tab") === "similar" ? "similar" : "mood",
+  );
+  const [moods, setMoods] = useState([]);
   const [movies, setMovies] = useState([]);
-  const [selectedMovie, setSelectedMovie] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [recommendations, setRecommendations] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const dropdownRef = useRef(null);
+  const [catalogError, setCatalogError] = useState("");
+  const [waking, setWaking] = useState(false);
 
-  // Fetch all movies when component mounts
+  const [mood, setMood] = useState(initial.get("mood") || "");
+  const [energy, setEnergy] = useState(initial.get("energy") || "balanced");
+  const [company, setCompany] = useState(initial.get("company") || "alone");
+  const [time, setTime] = useState(initial.get("time") || "any");
+  const [moodSeed, setMoodSeed] = useState(initial.get("seed") || "");
+
+  const [moodResults, setMoodResults] = useState(null);
+  const [moodStatus, setMoodStatus] = useState("idle");
+  const [moodError, setMoodError] = useState("");
+  const [shown, setShown] = useState([]);
+
+  const [similarSeed, setSimilarSeed] = useState("");
+  const [similarResults, setSimilarResults] = useState(null);
+  const [similarStatus, setSimilarStatus] = useState("idle");
+  const [similarError, setSimilarError] = useState("");
+
+  const [modalMovie, setModalMovie] = useState(null);
+  const [watchlistOpen, setWatchlistOpen] = useState(false);
+
+  const watchlist = useWatchlist();
+  const moodResultsRef = useRef(null);
+  const similarResultsRef = useRef(null);
+
+  // Catalogue + mood tiles. The first request after a cold start can
+  // take a while on the free Azure plan, hence the "waking up" banner.
   useEffect(() => {
-    const fetchMovies = async () => {
+    let alive = true;
+    const timer = window.setTimeout(() => {
+      if (alive) setWaking(true);
+    }, 4000);
+
+    Promise.allSettled([getMovies(), getMoods()]).then(([movieList, moodList]) => {
+      if (!alive) return;
+      window.clearTimeout(timer);
+      setWaking(false);
+
+      if (movieList.status === "fulfilled") {
+        setMovies(movieList.value);
+      } else {
+        setCatalogError("Could not load the movie list. Please refresh.");
+      }
+      if (moodList.status === "fulfilled") {
+        setMoods(moodList.value);
+      } else {
+        setCatalogError("Could not load the moods. Please refresh.");
+      }
+    });
+
+    return () => {
+      alive = false;
+      window.clearTimeout(timer);
+    };
+  }, []);
+
+  // Shareable state: ?mood=cry&energy=chill&company=alone&time=100&seed=Titanic
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (tab === "similar") params.set("tab", "similar");
+    if (mood) params.set("mood", mood);
+    if (energy !== "balanced") params.set("energy", energy);
+    if (company !== "alone") params.set("company", company);
+    if (time !== "any") params.set("time", time);
+    if (moodSeed) params.set("seed", moodSeed);
+    const search = params.toString();
+    window.history.replaceState(
+      null,
+      "",
+      `${window.location.pathname}${search ? `?${search}` : ""}`,
+    );
+  }, [tab, mood, energy, company, time, moodSeed]);
+
+  useEffect(() => {
+    if (moodStatus === "done") scrollTo(moodResultsRef);
+  }, [moodStatus]);
+
+  const loadMood = useCallback(
+    async (exclude) => {
+      if (!mood) return;
+      setMoodStatus("loading");
+      setMoodError("");
       try {
-        const response = await axios.get("api/movies/");
-        const data = response.data;
-        // Backend returns a plain array; keep tolerating the legacy
-        // double-encoded {movies: "[...]"} shape just in case.
-        const movies = Array.isArray(data)
-          ? data
-          : JSON.parse(data["movies"] ?? "[]");
-        setMovies(movies);
-      } catch (err) {
-        setError("Failed to load movies. Please try again later.");
+        const items = await recommendMood({
+          mood,
+          energy,
+          company,
+          maxRuntime: time === "any" ? null : Number(time),
+          seedMovie: moodSeed,
+          exclude,
+        });
+        setMoodResults(items);
+        setShown((previous) =>
+          Array.from(new Set([...previous, ...items.map((item) => item.title)])),
+        );
+      } catch (error) {
+        setMoodResults([]);
+        setMoodError(
+          error?.response?.status === 404
+            ? ""
+            : describeError(error, "Could not find movies for that mood."),
+        );
       }
-    };
-
-    fetchMovies();
-  }, []);
-
-  // Handle click outside dropdown
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  // Filter movies based on search term
-  const filteredMovies = movies.filter((movie) =>
-    movie.toLowerCase().includes(searchTerm.toLowerCase()),
+      setMoodStatus("done");
+    },
+    [mood, energy, company, time, moodSeed],
   );
 
-  // Handle movie selection
-  const handleMovieSelect = (movie) => {
-    setSelectedMovie(movie);
-    setSearchTerm(movie);
-    setIsDropdownOpen(false);
-    setError(null);
+  const findMood = () => {
+    setShown([]);
+    loadMood([]);
+  };
+  const shuffleMood = () => loadMood(shown);
+  const changeMood = () => {
+    setMoodResults(null);
+    setMoodError("");
+    setMoodStatus("idle");
+    setShown([]);
   };
 
-  // Handle search input change
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
-    setIsDropdownOpen(true);
-    if (!e.target.value) {
-      setSelectedMovie("");
-    }
+  const loadSimilar = useCallback(
+    async (title) => {
+      const seed = (title ?? similarSeed).trim();
+      if (!seed) return;
+      setSimilarSeed(seed);
+      setSimilarStatus("loading");
+      setSimilarError("");
+      try {
+        setSimilarResults(await recommendSimilar(seed));
+      } catch (error) {
+        setSimilarResults([]);
+        setSimilarError(describeError(error, "Could not find similar movies."));
+      }
+      setSimilarStatus("done");
+    },
+    [similarSeed],
+  );
+
+  const handleMoreLikeThis = (movie) => {
+    setModalMovie(null);
+    setTab("similar");
+    setSimilarResults(null);
+    loadSimilar(movie.title);
   };
 
-  // Get recommendations
-  const getRecommendations = async () => {
-    if (!selectedMovie) return;
-
-    setLoading(true);
-    setError(null);
-    setRecommendations([]);
-
-    try {
-      const response = await axios.post("api/recommend/", {
-        movie_title: selectedMovie,
-      });
-      setRecommendations(response.data);
-    } catch (err) {
-      console.error("Error getting recommendations:", err);
-      setError(
-        err.response?.data?.error ||
-          "Failed to get recommendations. Please try again.",
-      );
-    } finally {
-      setLoading(false);
-    }
+  const updateRefine = (patch) => {
+    if (patch.energy) setEnergy(patch.energy);
+    if (patch.company) setCompany(patch.company);
+    if (patch.time) setTime(patch.time);
   };
+
+  const selectedMood = moods.find((item) => item.slug === mood);
+  const showMoodResults = moodStatus !== "idle" || moodResults !== null;
 
   return (
-    <div className="app-container">
-      <header className="app-header">
-        <div className="content">
-          <h1>🎬 Movie Recommender</h1>
-          <p>
-            Discover your next favorite movie based on your current favorites
+    <div className="app">
+      <Header
+        tab={tab}
+        onTab={setTab}
+        savedCount={watchlist.items.length}
+        onOpenWatchlist={() => setWatchlistOpen(true)}
+      />
+
+      <main className="main">
+        {waking && (
+          <p className="banner" role="status">
+            Waking up the server — the first load can take a minute.
           </p>
-        </div>
-      </header>
-
-      <main className="container">
-        <div className="row justify-content-center mb-5">
-          <div className="col-md-8 col-lg-6">
-            <div className="selection-card">
-              <div className="card-body p-4">
-                <div className="mb-4">
-                  <label htmlFor="movieSearch" className="form-label h6 mb-3">
-                    Search and select a movie you love:
-                  </label>
-                  <div className="search-select-container" ref={dropdownRef}>
-                    <input
-                      type="text"
-                      id="movieSearch"
-                      className="form-control movie-search-input"
-                      value={searchTerm}
-                      onChange={handleSearchChange}
-                      onClick={() => setIsDropdownOpen(true)}
-                      placeholder="Type to search movies..."
-                      autoComplete="off"
-                    />
-                    {isDropdownOpen && searchTerm && (
-                      <div className="movie-suggestions">
-                        {filteredMovies.length > 0 ? (
-                          filteredMovies.slice(0, 8).map((movie, index) => (
-                            <div
-                              key={index}
-                              className={`suggestion-item ${movie === selectedMovie ? "selected" : ""}`}
-                              onClick={() => handleMovieSelect(movie)}
-                            >
-                              {movie}
-                            </div>
-                          ))
-                        ) : (
-                          <div className="suggestion-item no-results">
-                            No movies found
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <button
-                  className="btn recommend-btn w-100"
-                  onClick={getRecommendations}
-                  disabled={!selectedMovie || loading}
-                >
-                  {loading ? (
-                    <>
-                      <span className="loading-spinner"></span>
-                      Finding Similar Movies...
-                    </>
-                  ) : (
-                    "Get Recommendations"
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {error && (
-          <div className="row justify-content-center mb-4">
-            <div className="col-md-8 col-lg-6">
-              <div className="error-alert" role="alert">
-                {error}
-              </div>
-            </div>
-          </div>
+        )}
+        {catalogError && (
+          <p className="banner banner-error" role="alert">
+            {catalogError}
+          </p>
         )}
 
-        {recommendations.length > 0 && (
-          <div className="recommendations-section">
-            <h2 className="text-center mb-4">
-              Movies Similar to "{selectedMovie}"
-            </h2>
-            <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-5 g-4">
-              {recommendations.map((movie, index) => (
-                <div key={index} className="col">
-                  <div className="movie-card h-100">
-                    <img
-                      src={movie.poster_url}
-                      className="card-img-top"
-                      alt={movie.title}
-                      loading="lazy"
-                    />
-                    <div className="card-body">
-                      <h5 className="card-title text-center">{movie.title}</h5>
-                    </div>
-                  </div>
-                </div>
-              ))}
+        {tab === "mood" ? (
+          showMoodResults ? (
+            <div ref={moodResultsRef}>
+              <ResultsGrid
+                heading={
+                  selectedMood
+                    ? `${selectedMood.emoji} ${selectedMood.label}`
+                    : "Picked for your mood"
+                }
+                items={moodResults ?? []}
+                loading={moodStatus === "loading"}
+                error={moodError}
+                onRetry={findMood}
+                onOpen={setModalMovie}
+                onShuffle={moodResults?.length ? shuffleMood : undefined}
+                onChangeMood={changeMood}
+                onToggleSave={watchlist.toggle}
+                isSaved={watchlist.has}
+                emptyText="No more movies for this mood. Change mood to keep looking."
+              />
             </div>
-          </div>
+          ) : (
+            <section className="picker">
+              <div className="hero">
+                <h1 className="hero-title">How are you feeling tonight?</h1>
+                <p className="hero-sub">
+                  Pick a mood. We will find ten films that fit it.
+                </p>
+              </div>
+
+              <MoodPicker
+                moods={moods}
+                selected={mood}
+                onSelect={(slug) => setMood(slug === mood ? "" : slug)}
+              />
+
+              {mood && (
+                <div className="refine-panel">
+                  <RefineBar
+                    energy={energy}
+                    company={company}
+                    time={time}
+                    onChange={updateRefine}
+                  />
+
+                  <MovieSearch
+                    movies={movies}
+                    value={moodSeed}
+                    onSelect={setMoodSeed}
+                    label="Add a movie you loved (optional)"
+                    placeholder="Search a title..."
+                    hint="Blends your mood with films like it."
+                  />
+
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-lg"
+                    onClick={findMood}
+                  >
+                    Find my movies
+                  </button>
+                </div>
+              )}
+            </section>
+          )
+        ) : (
+          <section className="similar">
+            <div className="hero hero-compact">
+              <h1 className="hero-title">Find movies like one you love</h1>
+              <p className="hero-sub">
+                Search a favourite and we will line up films with the same DNA.
+              </p>
+            </div>
+
+            <div className="similar-form">
+              <MovieSearch
+                movies={movies}
+                value={similarSeed}
+                onSelect={setSimilarSeed}
+                label="A movie you love"
+                placeholder="Type to search movies..."
+              />
+              <button
+                type="button"
+                className="btn btn-primary btn-lg"
+                onClick={() => loadSimilar()}
+                disabled={!similarSeed.trim() || similarStatus === "loading"}
+              >
+                Find similar movies
+              </button>
+            </div>
+
+            {similarStatus !== "idle" && (
+              <div ref={similarResultsRef} className="similar-results">
+                <ResultsGrid
+                  heading={similarSeed ? `Movies like “${similarSeed}”` : "Similar movies"}
+                  items={similarResults ?? []}
+                  loading={similarStatus === "loading"}
+                  error={similarError}
+                  onRetry={() => loadSimilar(similarSeed)}
+                  onOpen={setModalMovie}
+                  onToggleSave={watchlist.toggle}
+                  isSaved={watchlist.has}
+                  emptyText="No similar movies found. Try another title."
+                />
+              </div>
+            )}
+          </section>
         )}
       </main>
 
-      <footer className="app-footer">
-        <div className="container text-center">
-          <p>Made with ❤️ by Gaurab Prasai</p>
-        </div>
+      <footer className="footer">
+        <p>
+          Made with <span aria-hidden="true">❤️</span> by Gaurab Prasai
+        </p>
+        <p className="footer-note">
+          Movie data from TMDB. Catalog covers ~4,800 popular films, mostly
+          before 2018.
+        </p>
+        <p className="footer-note">
+          This product uses the TMDB API but is not endorsed or certified by
+          TMDB.
+        </p>
       </footer>
+
+      {modalMovie && (
+        <MovieModal
+          movie={modalMovie}
+          saved={watchlist.has(modalMovie)}
+          onClose={() => setModalMovie(null)}
+          onMoreLikeThis={handleMoreLikeThis}
+          onToggleSave={watchlist.toggle}
+        />
+      )}
+
+      {watchlistOpen && (
+        <Watchlist
+          items={watchlist.items}
+          onClose={() => setWatchlistOpen(false)}
+          onRemove={watchlist.remove}
+          onOpen={(item) => {
+            setWatchlistOpen(false);
+            setModalMovie(item);
+          }}
+        />
+      )}
     </div>
   );
 }

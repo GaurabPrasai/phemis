@@ -17,8 +17,12 @@ function App() {
     const fetchMovies = async () => {
       try {
         const response = await axios.get("api/movies/");
-        const movies = JSON.parse(response.data["movies"]);
-        console.log(movies);
+        const data = response.data;
+        // Backend returns a plain array; keep tolerating the legacy
+        // double-encoded {movies: "[...]"} shape just in case.
+        const movies = Array.isArray(data)
+          ? data
+          : JSON.parse(data["movies"] ?? "[]");
         setMovies(movies);
       } catch (err) {
         setError("Failed to load movies. Please try again later.");

@@ -57,3 +57,7 @@ pids
 *.pid
 *.seed
 *.pid.lock
+# Azure deployment artefacts
+backend/staticfiles_public/
+backend/deploy-package/
+backend/staticfiles/

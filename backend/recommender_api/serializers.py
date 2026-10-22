@@ -11,4 +11,5 @@ class RecommendationRequestSerializer(serializers.Serializer):
 
 class MovieRecommendationSerializer(serializers.Serializer):
     title = serializers.CharField(max_length=255)
-    poster_url = serializers.URLField(allow_blank=True) 
+    # CharField (not URLField) so inline data-URI placeholders are valid
+    poster_url = serializers.CharField(allow_blank=True, required=False) 

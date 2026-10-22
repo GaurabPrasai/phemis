@@ -15,9 +15,15 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
+
+from movies.views import serve_react_app
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('movies.urls')),
+    # Everything else is the React single-page app. This route also
+    # picks up /static/ requests that WhiteNoise did not find in
+    # STATIC_ROOT, so the hashed React assets in the build resolve.
+    re_path(r'^(?!api/).*$', serve_react_app, name='react_app'),
 ]

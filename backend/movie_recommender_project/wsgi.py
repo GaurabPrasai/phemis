@@ -15,6 +15,8 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'movie_recommender_project.setti
 
 application = get_wsgi_application()
 
-# Vercel handler
+# Azure: Azure App Service WSGI will call this application object directly.
+# The Vercel handler below is no longer referenced by webapp, but is kept so
+# any existing Vercel/vercel.json deployments continue to function.
 def handler(request, **kwargs):
     return application(request, **kwargs)

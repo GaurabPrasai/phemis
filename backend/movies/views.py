@@ -6,6 +6,7 @@ from django.views.decorators.cache import never_cache
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
+from .moods import MOODS
 from .recommender import MovieRecommender
 
 # Create a singleton instance of MovieRecommender
@@ -42,6 +43,73 @@ def get_recommendations(request):
     if not recommendations:
         return Response(
             {"error": f"Could not generate recommendations for '{movie_title}'"},
+            status=status.HTTP_404_NOT_FOUND,
+        )
+
+    return Response(recommendations)
+
+
+@api_view(["GET"])
+def get_moods(request):
+    """List the mood tiles shown on the home screen."""
+    return Response(
+        [
+            {
+                "slug": slug,
+                "label": mood["label"],
+                "emoji": mood["emoji"],
+                "blurb": mood["blurb"],
+            }
+            for slug, mood in MOODS.items()
+        ]
+    )
+
+
+@api_view(["POST"])
+def get_mood_recommendations(request):
+    """Recommend movies for a mood, with optional refinements."""
+    mood = request.data.get("mood")
+    if not mood or mood not in MOODS:
+        return Response(
+            {"error": f"Unknown mood '{mood}'. Try one of: {', '.join(MOODS)}"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    if not recommender.meta_ready:
+        return Response(
+            {"error": "Mood data is not available on this server yet."},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+
+    try:
+        limit = int(request.data.get("limit", 10))
+    except (TypeError, ValueError):
+        limit = 10
+    limit = max(1, min(20, limit))
+
+    max_runtime = request.data.get("max_runtime")
+    try:
+        max_runtime = int(max_runtime) if max_runtime else None
+    except (TypeError, ValueError):
+        max_runtime = None
+
+    exclude = request.data.get("exclude") or []
+    if not isinstance(exclude, list):
+        exclude = []
+
+    recommendations = recommender.recommend_by_mood(
+        mood,
+        energy=request.data.get("energy") or "balanced",
+        company=request.data.get("company") or "alone",
+        max_runtime=max_runtime,
+        seed_movie=request.data.get("seed_movie") or None,
+        exclude=[str(title) for title in exclude],
+        limit=limit,
+    )
+
+    if not recommendations:
+        return Response(
+            {"error": "No movies matched that mood. Try relaxing the filters."},
             status=status.HTTP_404_NOT_FOUND,
         )
 

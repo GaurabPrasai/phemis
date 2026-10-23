@@ -2,12 +2,7 @@ export default function Header({ tab, onTab, savedCount, onOpenWatchlist }) {
   return (
     <header className="header">
       <div className="header-inner">
-        <div className="brand">
-          <span className="brand-mark" aria-hidden="true">
-            ◉
-          </span>
-          <span className="brand-name">Phemis</span>
-        </div>
+        <span className="brand-name">Phemis</span>
 
         <nav className="tabs" aria-label="Recommendation mode">
           <button
@@ -30,14 +25,13 @@ export default function Header({ tab, onTab, savedCount, onOpenWatchlist }) {
 
         <button
           type="button"
-          className="watchlist-button"
+          className="saved-button"
           onClick={onOpenWatchlist}
-          aria-label={`Open watchlist, ${savedCount} saved`}
+          aria-label={`Open saved movies, ${savedCount} saved`}
         >
-          <span aria-hidden="true">♡</span>
-          <span className="watchlist-label">Watchlist</span>
+          Saved
           {savedCount > 0 && (
-            <span className="watchlist-count" aria-hidden="true">
+            <span className="saved-count" aria-hidden="true">
               {savedCount}
             </span>
           )}

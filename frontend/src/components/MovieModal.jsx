@@ -72,18 +72,19 @@ export default function MovieModal({ movie, onClose, onMoreLikeThis, onToggleSav
         <button
           type="button"
           className="modal-close"
-          aria-label="Close details"
           onClick={onClose}
           ref={closeRef}
         >
-          ×
+          Close
         </button>
 
         <div className="modal-body">
           <img className="modal-poster" src={movie.poster_url} alt={movie.title} />
 
           <div className="modal-info">
-            <h2 id="modal-title">{movie.title}</h2>
+            <h2 id="modal-title" className="modal-title">
+              {movie.title}
+            </h2>
             {meta && <p className="modal-meta">{meta}</p>}
 
             {movie.genres && movie.genres.length > 0 && (
@@ -107,11 +108,11 @@ export default function MovieModal({ movie, onClose, onMoreLikeThis, onToggleSav
               </button>
               <button
                 type="button"
-                className={`btn btn-ghost ${saved ? "is-saved" : ""}`}
+                className="btn btn-ghost"
                 aria-pressed={saved}
                 onClick={() => onToggleSave(movie)}
               >
-                {saved ? "♥ Saved" : "♡ Save"}
+                {saved ? "Saved" : "Save"}
               </button>
             </div>
           </div>

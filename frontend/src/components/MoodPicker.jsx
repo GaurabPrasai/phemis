@@ -9,9 +9,6 @@ export default function MoodPicker({ moods, selected, onSelect }) {
           aria-pressed={selected === mood.slug}
           onClick={() => onSelect(mood.slug)}
         >
-          <span className="mood-emoji" aria-hidden="true">
-            {mood.emoji}
-          </span>
           <span className="mood-label">{mood.label}</span>
           <span className="mood-blurb">{mood.blurb}</span>
         </button>

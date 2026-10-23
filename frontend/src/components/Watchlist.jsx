@@ -1,6 +1,10 @@
 import { useEffect, useRef } from "react";
 
+const FOCUSABLE =
+  'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
 export default function Watchlist({ items, onClose, onRemove, onOpen }) {
+  const panelRef = useRef(null);
   const closeRef = useRef(null);
 
   useEffect(() => {
@@ -13,8 +17,26 @@ export default function Watchlist({ items, onClose, onRemove, onOpen }) {
       if (event.key === "Escape") {
         event.preventDefault();
         onClose();
+        return;
+      }
+      if (event.key !== "Tab" || !panelRef.current) return;
+
+      const focusable = Array.from(
+        panelRef.current.querySelectorAll(FOCUSABLE),
+      ).filter((node) => node.offsetParent !== null);
+      if (focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
       }
     };
+
     document.addEventListener("keydown", handleKeyDown);
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
@@ -25,53 +47,51 @@ export default function Watchlist({ items, onClose, onRemove, onOpen }) {
 
   return (
     <div
-      className="drawer-backdrop"
+      className="saved-backdrop"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
     >
       <aside
-        className="drawer"
+        className="saved-panel"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="watchlist-title"
+        aria-labelledby="saved-title"
+        ref={panelRef}
       >
-        <div className="drawer-head">
-          <h2 id="watchlist-title">Your watchlist</h2>
+        <div className="saved-head">
+          <h2 id="saved-title">Saved</h2>
           <button
             type="button"
-            className="drawer-close"
-            aria-label="Close watchlist"
+            className="saved-close"
             onClick={onClose}
             ref={closeRef}
           >
-            ×
+            Close
           </button>
         </div>
 
         {items.length === 0 ? (
-          <p className="drawer-empty">
-            Nothing saved yet. Hit ♡ on a movie to keep it here.
-          </p>
+          <p className="saved-empty">Nothing saved yet.</p>
         ) : (
-          <ul className="watchlist">
+          <ul className="saved-list">
             {items.map((item) => (
-              <li key={item.movie_id ?? item.title} className="watchlist-item">
+              <li key={item.movie_id ?? item.title} className="saved-item">
                 <button
                   type="button"
-                  className="watchlist-open"
+                  className="saved-open"
                   aria-label={`Details for ${item.title}`}
                   onClick={() => onOpen(item)}
                 >
                   <img src={item.poster_url} alt="" />
                 </button>
-                <div className="watchlist-text">
-                  <p className="watchlist-name">{item.title}</p>
-                  {item.year ? <p className="watchlist-year">{item.year}</p> : null}
+                <div>
+                  <p className="saved-name">{item.title}</p>
+                  {item.year ? <p className="saved-year">{item.year}</p> : null}
                 </div>
                 <button
                   type="button"
-                  className="btn btn-quiet btn-sm"
+                  className="saved-remove"
                   aria-label={`Remove ${item.title}`}
                   onClick={() => onRemove(item)}
                 >

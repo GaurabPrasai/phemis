@@ -13,6 +13,9 @@ export default function ResultsGrid({
   onToggleSave,
   isSaved,
   emptyText,
+  emptyHint,
+  emptyLabel,
+  onEmpty,
 }) {
   return (
     <section className="results" aria-busy={loading}>
@@ -22,7 +25,7 @@ export default function ResultsGrid({
           {onShuffle && (
             <button
               type="button"
-              className="btn btn-ghost"
+              className="btn btn-ghost btn-sm"
               onClick={onShuffle}
               disabled={loading}
             >
@@ -30,7 +33,11 @@ export default function ResultsGrid({
             </button>
           )}
           {onChangeMood && (
-            <button type="button" className="btn btn-quiet" onClick={onChangeMood}>
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              onClick={onChangeMood}
+            >
               Change mood
             </button>
           )}
@@ -39,10 +46,13 @@ export default function ResultsGrid({
 
       {error ? (
         <div className="state" role="alert">
-          <p>{error}</p>
+          <p className="state-title is-error">
+            <span className="notice-dot" aria-hidden="true" />
+            {error}
+          </p>
           {onRetry && (
-            <button type="button" className="btn btn-primary" onClick={onRetry}>
-              Retry
+            <button type="button" className="btn btn-ghost" onClick={onRetry}>
+              Try again
             </button>
           )}
         </div>
@@ -54,10 +64,11 @@ export default function ResultsGrid({
         </div>
       ) : items.length > 0 ? (
         <div className="grid">
-          {items.map((movie) => (
+          {items.map((movie, index) => (
             <MovieCard
               key={movie.movie_id ?? movie.title}
               movie={movie}
+              index={index}
               saved={isSaved(movie)}
               onOpen={onOpen}
               onToggleSave={onToggleSave}
@@ -66,7 +77,13 @@ export default function ResultsGrid({
         </div>
       ) : (
         <div className="state">
-          <p>{emptyText || "Nothing here yet."}</p>
+          <p className="state-title">{emptyText || "Nothing matched that mix"}</p>
+          {emptyHint && <p className="state-hint">{emptyHint}</p>}
+          {onEmpty && (
+            <button type="button" className="btn btn-ghost" onClick={onEmpty}>
+              {emptyLabel || "Reset filters"}
+            </button>
+          )}
         </div>
       )}
     </section>

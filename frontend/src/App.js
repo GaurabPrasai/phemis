@@ -197,25 +197,22 @@ function App() {
 
       <main className="main">
         {waking && (
-          <p className="banner" role="status">
-            Waking up the server — the first load can take a minute.
+          <p className="notice" role="status">
+            Waking things up, one moment...
           </p>
         )}
         {catalogError && (
-          <p className="banner banner-error" role="alert">
+          <p className="notice" role="alert">
+            <span className="notice-dot" aria-hidden="true" />
             {catalogError}
           </p>
         )}
 
         {tab === "mood" ? (
           showMoodResults ? (
-            <div ref={moodResultsRef}>
+            <div ref={moodResultsRef} className="results-anchor">
               <ResultsGrid
-                heading={
-                  selectedMood
-                    ? `${selectedMood.emoji} ${selectedMood.label}`
-                    : "Picked for your mood"
-                }
+                heading={selectedMood ? selectedMood.label : "Picked for your mood"}
                 items={moodResults ?? []}
                 loading={moodStatus === "loading"}
                 error={moodError}
@@ -225,13 +222,18 @@ function App() {
                 onChangeMood={changeMood}
                 onToggleSave={watchlist.toggle}
                 isSaved={watchlist.has}
-                emptyText="No more movies for this mood. Change mood to keep looking."
+                emptyText="Nothing matched that mix"
+                emptyHint="Try a different energy or time"
+                emptyLabel="Change mood"
+                onEmpty={changeMood}
               />
             </div>
           ) : (
             <section className="picker">
               <div className="hero">
-                <h1 className="hero-title">How are you feeling tonight?</h1>
+                <h1 className="hero-title">
+                  How are you <em>feeling</em> tonight?
+                </h1>
                 <p className="hero-sub">
                   Pick a mood. We will find ten films that fit it.
                 </p>
@@ -263,7 +265,7 @@ function App() {
 
                   <button
                     type="button"
-                    className="btn btn-primary btn-lg"
+                    className="btn btn-primary"
                     onClick={findMood}
                   >
                     Find my movies
@@ -274,8 +276,10 @@ function App() {
           )
         ) : (
           <section className="similar">
-            <div className="hero hero-compact">
-              <h1 className="hero-title">Find movies like one you love</h1>
+            <div className="hero">
+              <h1 className="hero-title">
+                Start from a movie you <em>love</em>
+              </h1>
               <p className="hero-sub">
                 Search a favourite and we will line up films with the same DNA.
               </p>
@@ -291,7 +295,7 @@ function App() {
               />
               <button
                 type="button"
-                className="btn btn-primary btn-lg"
+                className="btn btn-primary"
                 onClick={() => loadSimilar()}
                 disabled={!similarSeed.trim() || similarStatus === "loading"}
               >
@@ -300,7 +304,10 @@ function App() {
             </div>
 
             {similarStatus !== "idle" && (
-              <div ref={similarResultsRef} className="similar-results">
+              <div
+                ref={similarResultsRef}
+                className="similar-results results-anchor"
+              >
                 <ResultsGrid
                   heading={similarSeed ? `Movies like “${similarSeed}”` : "Similar movies"}
                   items={similarResults ?? []}
@@ -310,7 +317,8 @@ function App() {
                   onOpen={setModalMovie}
                   onToggleSave={watchlist.toggle}
                   isSaved={watchlist.has}
-                  emptyText="No similar movies found. Try another title."
+                  emptyText="Nothing matched that title"
+                  emptyHint="Try a different movie"
                 />
               </div>
             )}
@@ -319,17 +327,16 @@ function App() {
       </main>
 
       <footer className="footer">
-        <p>
-          Made with <span aria-hidden="true">❤️</span> by Gaurab Prasai
-        </p>
-        <p className="footer-note">
-          Movie data from TMDB. Catalog covers ~4,800 popular films, mostly
-          before 2018.
-        </p>
-        <p className="footer-note">
-          This product uses the TMDB API but is not endorsed or certified by
-          TMDB.
-        </p>
+        <div className="footer-inner">
+          <p>
+            Made by Gaurab Prasai · Movie data from TMDB. Catalog: ~4,800
+            popular films, mostly before 2018.
+          </p>
+          <p>
+            This product uses the TMDB API but is not endorsed or certified by
+            TMDB.
+          </p>
+        </div>
       </footer>
 
       {modalMovie && (

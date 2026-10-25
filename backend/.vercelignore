@@ -1,9 +1,0 @@
-# Ignore all .pkl files
-*.pkl
-recommender_api/*.pkl
-recommender_api/similarity.pkl
-recommender_api/movies.pkl
-
-# Ignore other large binary files if any exist
-*.zip
-*.tar.gz 

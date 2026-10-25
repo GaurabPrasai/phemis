@@ -24,7 +24,7 @@ APP_NAME="movie-recommender-app"
 SKU="B1"                        # Basic: always-on, 1 core / 1.75 GB. P*v3
                                # quota is 0 on student/free subscriptions.
 PYTHON_RUNTIME="PYTHON:3.12"
-TMDB_API_KEY="REDACTED_TMDB_KEY"
+TMDB_API_KEY="${TMDB_API_KEY:?Set TMDB_API_KEY in your environment before deploying}"
 
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 BACKEND_DIR="$REPO_ROOT/backend"
@@ -91,7 +91,6 @@ cd "$FRONTEND_DIR"
 # the site root), overriding the GitHub Pages "homepage" in package.json.
 PUBLIC_URL=/ \
 REACT_APP_API_URL="https://$APP_URL" \
-REACT_APP_TMDB_API_KEY="$TMDB_API_KEY" \
     npm run build
 
 step "Copying the React build into the Django static root"

@@ -156,7 +156,7 @@ STORAGES = {
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # TMDB API Configuration
-TMDB_API_KEY = config("TMDB_API_KEY", default="REDACTED_TMDB_KEY")
+TMDB_API_KEY = config("TMDB_API_KEY", default="")
 
 AWS_ACCESS_KEY_ID = config("AWS_ACCESS_KEY_ID", default="")
 AWS_SECRET_ACCESS_KEY = config("AWS_SECRET_ACCESS_KEY", default="")

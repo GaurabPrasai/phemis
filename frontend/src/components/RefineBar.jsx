@@ -12,15 +12,18 @@ const COMPANY = [
 ];
 
 const TIME = [
-  { value: "any", label: "Any length" },
+  { value: "any", label: "Any" },
   { value: "100", label: "Under 100 min" },
-  { value: "130", label: "Under 130 min" },
 ];
 
 function Chips({ legend, options, value, onChange, disabled }) {
+  const labelId = `refine-${legend.toLowerCase()}`;
+
   return (
-    <fieldset className="refine-group" disabled={disabled}>
-      <legend>{legend}</legend>
+    <div className="refine-group" role="group" aria-labelledby={labelId}>
+      <span className="refine-label" id={labelId}>
+        {legend}
+      </span>
       <div className="chips">
         {options.map((option) => (
           <button
@@ -29,12 +32,13 @@ function Chips({ legend, options, value, onChange, disabled }) {
             className={`chip ${value === option.value ? "is-active" : ""}`}
             aria-pressed={value === option.value}
             onClick={() => onChange(option.value)}
+            disabled={disabled}
           >
             {option.label}
           </button>
         ))}
       </div>
-    </fieldset>
+    </div>
   );
 }
 
@@ -55,7 +59,7 @@ export default function RefineBar({
         disabled={disabled}
       />
       <Chips
-        legend="Watching with"
+        legend="With"
         options={COMPANY}
         value={company}
         onChange={(value) => onChange({ company: value })}

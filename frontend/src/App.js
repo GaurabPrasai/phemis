@@ -6,7 +6,9 @@ import {
   recommendMood,
   recommendSimilar,
 } from "./api";
+import { BRAND, getMoodStyle } from "./moods";
 import Header from "./components/Header";
+import MoodPanel from "./components/MoodPanel";
 import MoodPicker from "./components/MoodPicker";
 import MovieModal from "./components/MovieModal";
 import MovieSearch from "./components/MovieSearch";
@@ -17,12 +19,8 @@ import useWatchlist from "./hooks/useWatchlist";
 
 const initial = new URLSearchParams(window.location.search);
 
-function scrollTo(ref) {
-  const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-  ref.current?.scrollIntoView({
-    behavior: reduceMotion ? "auto" : "smooth",
-    block: "start",
-  });
+function isNarrowScreen() {
+  return window.matchMedia?.("(max-width: 639px)").matches;
 }
 
 function App() {
@@ -39,9 +37,12 @@ function App() {
   const [company, setCompany] = useState(initial.get("company") || "alone");
   const [time, setTime] = useState(initial.get("time") || "any");
   const [moodSeed, setMoodSeed] = useState(initial.get("seed") || "");
+  const [seedOpen, setSeedOpen] = useState(Boolean(initial.get("seed")));
 
   const [moodResults, setMoodResults] = useState(null);
-  const [moodStatus, setMoodStatus] = useState("idle");
+  const [moodStatus, setMoodStatus] = useState(
+    initial.get("mood") ? "loading" : "idle",
+  );
   const [moodError, setMoodError] = useState("");
   const [shown, setShown] = useState([]);
 
@@ -51,11 +52,14 @@ function App() {
   const [similarError, setSimilarError] = useState("");
 
   const [modalMovie, setModalMovie] = useState(null);
+  const [modalContext, setModalContext] = useState({
+    context: "",
+    accent: BRAND,
+  });
   const [watchlistOpen, setWatchlistOpen] = useState(false);
 
   const watchlist = useWatchlist();
-  const moodResultsRef = useRef(null);
-  const similarResultsRef = useRef(null);
+  const moodRequest = useRef(0);
 
   // Catalogue + mood tiles. The first request after a cold start can
   // take a while on the free Azure plan, hence the "waking up" banner.
@@ -105,13 +109,11 @@ function App() {
     );
   }, [tab, mood, energy, company, time, moodSeed]);
 
-  useEffect(() => {
-    if (moodStatus === "done") scrollTo(moodResultsRef);
-  }, [moodStatus]);
-
   const loadMood = useCallback(
     async (exclude) => {
       if (!mood) return;
+      const requestId = moodRequest.current + 1;
+      moodRequest.current = requestId;
       setMoodStatus("loading");
       setMoodError("");
       try {
@@ -123,11 +125,13 @@ function App() {
           seedMovie: moodSeed,
           exclude,
         });
+        if (requestId !== moodRequest.current) return;
         setMoodResults(items);
         setShown((previous) =>
           Array.from(new Set([...previous, ...items.map((item) => item.title)])),
         );
       } catch (error) {
+        if (requestId !== moodRequest.current) return;
         setMoodResults([]);
         setMoodError(
           error?.response?.status === 404
@@ -135,21 +139,70 @@ function App() {
             : describeError(error, "Could not find movies for that mood."),
         );
       }
-      setMoodStatus("done");
+      if (requestId === moodRequest.current) setMoodStatus("done");
     },
     [mood, energy, company, time, moodSeed],
   );
 
-  const findMood = () => {
+  // Refinement changes and a new mood both reload after a short pause.
+  useEffect(() => {
+    if (!mood) return undefined;
+    const timer = window.setTimeout(() => loadMood([]), 150);
+    return () => window.clearTimeout(timer);
+  }, [mood, loadMood]);
+
+  const chooseMood = (slug) => {
+    moodRequest.current += 1;
+    setMood(slug);
+    setEnergy("balanced");
+    setCompany("alone");
+    setTime("any");
+    setMoodSeed("");
+    setSeedOpen(false);
     setShown([]);
-    loadMood([]);
+    setMoodResults(null);
+    setMoodError("");
+    setMoodStatus("loading");
+    if (isNarrowScreen()) {
+      const reduceMotion = window.matchMedia?.(
+        "(prefers-reduced-motion: reduce)",
+      ).matches;
+      window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
+    }
   };
+
   const shuffleMood = () => loadMood(shown);
+
   const changeMood = () => {
+    moodRequest.current += 1;
+    setMood("");
     setMoodResults(null);
     setMoodError("");
     setMoodStatus("idle");
     setShown([]);
+    setSeedOpen(false);
+  };
+
+  const resetRefine = () => {
+    moodRequest.current += 1;
+    setEnergy("balanced");
+    setCompany("alone");
+    setTime("any");
+    setMoodSeed("");
+    setSeedOpen(false);
+  };
+
+  const toggleSeed = () => {
+    if (seedOpen && moodSeed) {
+      moodRequest.current += 1;
+      setMoodSeed("");
+    }
+    setSeedOpen(!seedOpen);
+  };
+
+  const selectSeed = (title) => {
+    moodRequest.current += 1;
+    setMoodSeed(title);
   };
 
   const loadSimilar = useCallback(
@@ -170,6 +223,30 @@ function App() {
     [similarSeed],
   );
 
+  const closeModal = useCallback(() => setModalMovie(null), []);
+  const closeWatchlist = useCallback(() => setWatchlistOpen(false), []);
+
+  const selectedMood = moods.find((item) => item.slug === mood);
+  const moodStyle = getMoodStyle(mood);
+  const showMoodResults = moodStatus !== "idle" || moodResults !== null;
+  const panelBlurb = selectedMood?.blurb?.replace(/\.$/, "");
+
+  const openMoodMovie = (movie) => {
+    setModalContext({
+      context: `Matches your mood · ${selectedMood?.label ?? "your mood"}`,
+      accent: moodStyle.color,
+    });
+    setModalMovie(movie);
+  };
+
+  const openSimilarMovie = (movie) => {
+    setModalContext({
+      context: similarSeed ? `Because you liked ${similarSeed}` : "",
+      accent: BRAND,
+    });
+    setModalMovie(movie);
+  };
+
   const handleMoreLikeThis = (movie) => {
     setModalMovie(null);
     setTab("similar");
@@ -178,13 +255,11 @@ function App() {
   };
 
   const updateRefine = (patch) => {
+    moodRequest.current += 1;
     if (patch.energy) setEnergy(patch.energy);
     if (patch.company) setCompany(patch.company);
     if (patch.time) setTime(patch.time);
   };
-
-  const selectedMood = moods.find((item) => item.slug === mood);
-  const showMoodResults = moodStatus !== "idle" || moodResults !== null;
 
   return (
     <div className="app">
@@ -193,6 +268,7 @@ function App() {
         onTab={setTab}
         savedCount={watchlist.items.length}
         onOpenWatchlist={() => setWatchlistOpen(true)}
+        savedOpen={watchlistOpen}
       />
 
       <main className="main">
@@ -203,85 +279,91 @@ function App() {
         )}
         {catalogError && (
           <p className="notice" role="alert">
-            <span className="notice-dot" aria-hidden="true" />
             {catalogError}
           </p>
         )}
 
         {tab === "mood" ? (
           showMoodResults ? (
-            <div ref={moodResultsRef} className="results-anchor">
-              <ResultsGrid
-                heading={selectedMood ? selectedMood.label : "Picked for your mood"}
-                items={moodResults ?? []}
-                loading={moodStatus === "loading"}
-                error={moodError}
-                onRetry={findMood}
-                onOpen={setModalMovie}
-                onShuffle={moodResults?.length ? shuffleMood : undefined}
-                onChangeMood={changeMood}
-                onToggleSave={watchlist.toggle}
-                isSaved={watchlist.has}
-                emptyText="Nothing matched that mix"
-                emptyHint="Try a different energy or time"
-                emptyLabel="Change mood"
-                onEmpty={changeMood}
-              />
-            </div>
-          ) : (
-            <section className="picker">
-              <div className="hero">
-                <h1 className="hero-title">
-                  How are you <em>feeling</em> tonight?
-                </h1>
-                <p className="hero-sub">
-                  Pick a mood. We will find ten films that fit it.
-                </p>
-              </div>
-
-              <MoodPicker
-                moods={moods}
-                selected={mood}
-                onSelect={(slug) => setMood(slug === mood ? "" : slug)}
-              />
-
-              {mood && (
-                <div className="refine-panel">
+            <ResultsGrid
+              heading="Ten films for tonight"
+              accent={moodStyle.color}
+              panel={
+                <MoodPanel
+                  color={moodStyle.color}
+                  eyebrow="Your mood"
+                  title={selectedMood?.label ?? "Picked for your mood"}
+                  subline={
+                    panelBlurb
+                      ? `${panelBlurb}. Ten films picked for tonight.`
+                      : "Ten films picked for tonight."
+                  }
+                >
                   <RefineBar
                     energy={energy}
                     company={company}
                     time={time}
                     onChange={updateRefine}
                   />
-
-                  <MovieSearch
-                    movies={movies}
-                    value={moodSeed}
-                    onSelect={setMoodSeed}
-                    label="Add a movie you loved (optional)"
-                    placeholder="Search a title..."
-                    hint="Blends your mood with films like it."
-                  />
-
                   <button
                     type="button"
-                    className="btn btn-primary"
-                    onClick={findMood}
+                    className="panel-seed-toggle"
+                    aria-expanded={seedOpen}
+                    aria-controls="mood-seed"
+                    onClick={toggleSeed}
                   >
-                    Find my movies
+                    Add a movie you loved
                   </button>
-                </div>
-              )}
+                  {seedOpen && (
+                    <div className="panel-seed" id="mood-seed">
+                      <MovieSearch
+                        movies={movies}
+                        value={moodSeed}
+                        onSelect={selectSeed}
+                        label="A movie you loved"
+                        placeholder="Search a title..."
+                        hint="Blends your mood with films like it."
+                      />
+                    </div>
+                  )}
+                </MoodPanel>
+              }
+              items={moodResults ?? []}
+              loading={moodStatus === "loading"}
+              error={moodError}
+              onRetry={() => loadMood([])}
+              onOpen={openMoodMovie}
+              onShuffle={moodResults?.length ? shuffleMood : undefined}
+              onChangeMood={changeMood}
+              emptyText="Nothing matched that mix"
+              emptyHint="Try a different energy or time"
+              emptyLabel="Reset filters"
+              onEmpty={resetRefine}
+            />
+          ) : (
+            <section className="picker">
+              <div className="hero">
+                <p className="hero-eyebrow">FIND SOMETHING TO WATCH</p>
+                <h1 className="hero-title">
+                  What are you in the <span>mood</span> for?
+                </h1>
+                <p className="hero-sub">
+                  Pick a feeling. We will find ten films that fit it.
+                </p>
+              </div>
+
+              <MoodPicker moods={moods} onSelect={chooseMood} />
             </section>
           )
         ) : (
           <section className="similar">
             <div className="hero">
+              <p className="hero-eyebrow">FIND SOMETHING TO WATCH</p>
               <h1 className="hero-title">
-                Start from a movie you <em>love</em>
+                Start from a movie you <span>love</span>
               </h1>
               <p className="hero-sub">
-                Search a favourite and we will line up films with the same DNA.
+                We will find films with a similar feel.
               </p>
             </div>
 
@@ -295,32 +377,39 @@ function App() {
               />
               <button
                 type="button"
-                className="btn btn-primary"
+                className="btn btn-brand"
                 onClick={() => loadSimilar()}
                 disabled={!similarSeed.trim() || similarStatus === "loading"}
               >
-                Find similar movies
+                Find films
               </button>
             </div>
 
             {similarStatus !== "idle" && (
-              <div
-                ref={similarResultsRef}
-                className="similar-results results-anchor"
-              >
-                <ResultsGrid
-                  heading={similarSeed ? `Movies like “${similarSeed}”` : "Similar movies"}
-                  items={similarResults ?? []}
-                  loading={similarStatus === "loading"}
-                  error={similarError}
-                  onRetry={() => loadSimilar(similarSeed)}
-                  onOpen={setModalMovie}
-                  onToggleSave={watchlist.toggle}
-                  isSaved={watchlist.has}
-                  emptyText="Nothing matched that title"
-                  emptyHint="Try a different movie"
-                />
-              </div>
+              <ResultsGrid
+                heading="Ten films with the same feel"
+                accent={BRAND}
+                panel={
+                  <MoodPanel
+                    color={BRAND}
+                    eyebrow="Your pick"
+                    titleAs="h2"
+                    title={
+                      similarSeed
+                        ? `Because you liked ${similarSeed}`
+                        : "Similar movies"
+                    }
+                    subline="Ten films with a similar feel."
+                  />
+                }
+                items={similarResults ?? []}
+                loading={similarStatus === "loading"}
+                error={similarError}
+                onRetry={() => loadSimilar(similarSeed)}
+                onOpen={openSimilarMovie}
+                emptyText="Nothing matched that title"
+                emptyHint="Try a different movie"
+              />
             )}
           </section>
         )}
@@ -343,7 +432,9 @@ function App() {
         <MovieModal
           movie={modalMovie}
           saved={watchlist.has(modalMovie)}
-          onClose={() => setModalMovie(null)}
+          context={modalContext.context}
+          accent={modalContext.accent}
+          onClose={closeModal}
           onMoreLikeThis={handleMoreLikeThis}
           onToggleSave={watchlist.toggle}
         />
@@ -352,10 +443,11 @@ function App() {
       {watchlistOpen && (
         <Watchlist
           items={watchlist.items}
-          onClose={() => setWatchlistOpen(false)}
+          onClose={closeWatchlist}
           onRemove={watchlist.remove}
           onOpen={(item) => {
             setWatchlistOpen(false);
+            setModalContext({ context: "", accent: BRAND });
             setModalMovie(item);
           }}
         />

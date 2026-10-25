@@ -1,6 +1,6 @@
 {
     "short_name": "Phemis",
-    "name": "Phemis - movies by mood",
+    "name": "Phemis - films by mood",
     "icons": [
         {
             "src": "favicon.ico",
@@ -10,6 +10,6 @@
     ],
     "start_url": ".",
     "display": "standalone",
-    "theme_color": "#0a0b0f",
-    "background_color": "#0a0b0f"
+    "theme_color": "#101223",
+    "background_color": "#101223"
 }

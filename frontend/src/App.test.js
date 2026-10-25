@@ -5,8 +5,8 @@ import App from "./App";
 import { getMovies, recommendMood, recommendSimilar } from "./api";
 
 const moods = [
-  { slug: "cry", label: "Need a good cry", emoji: "😭", blurb: "Emotional" },
-  { slug: "laugh", label: "Make me laugh", emoji: "😂", blurb: "Funny" },
+  { slug: "cry", label: "Need a good cry", emoji: "😭", blurb: "Emotional and moving" },
+  { slug: "laugh", label: "Make me laugh", emoji: "😂", blurb: "Light, funny, zero stress" },
 ];
 
 const cryResults = [
@@ -36,6 +36,8 @@ beforeAll(() => {
 });
 
 beforeEach(() => {
+  localStorage.clear();
+  window.history.replaceState(null, "", "/");
   // CRA's jest config resets mock implementations between tests.
   getMovies.mockResolvedValue(["Titanic", "Avatar"]);
   require("./api").getMoods.mockResolvedValue(moods);
@@ -51,31 +53,55 @@ beforeEach(() => {
   ]);
 });
 
-test("picking a mood and finding movies shows results and the details dialog", async () => {
+test("picking a mood opens results, refinements reload, and the film can be saved", async () => {
   const user = userEvent.setup();
   render(<App />);
 
   await user.click(await screen.findByRole("button", { name: /Need a good cry/i }));
-  expect(screen.getByText(/Watching with/i)).toBeInTheDocument();
-
-  await user.click(screen.getByRole("button", { name: "Find my movies" }));
 
   await waitFor(() =>
     expect(recommendMood).toHaveBeenCalledWith(
       expect.objectContaining({ mood: "cry", energy: "balanced", company: "alone" }),
     ),
   );
-  expect(await screen.findByText("Saving Private Ryan")).toBeInTheDocument();
-  expect(screen.getByText(/Matches your Need a good cry mood/)).toBeInTheDocument();
+  expect(
+    await screen.findByRole("button", { name: /Details for Saving Private Ryan/ }),
+  ).toBeInTheDocument();
+  expect(
+    screen.getByRole("heading", { name: "Need a good cry" }),
+  ).toBeInTheDocument();
 
-  await user.click(screen.getByRole("button", { name: "Details for Saving Private Ryan" }));
+  await user.click(screen.getByRole("button", { name: "Chill" }));
+  await waitFor(() =>
+    expect(recommendMood).toHaveBeenLastCalledWith(
+      expect.objectContaining({ mood: "cry", energy: "chill" }),
+    ),
+  );
+
+  await user.click(
+    screen.getByRole("button", { name: /Details for Saving Private Ryan/ }),
+  );
   const dialog = await screen.findByRole("dialog");
   expect(dialog).toHaveAccessibleName("Saving Private Ryan");
   expect(screen.getByText(/169 min/)).toBeInTheDocument();
+  expect(screen.getByText("WWII.")).toBeInTheDocument();
+  expect(screen.getByText(/Why it fits:/)).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "More like this" })).toBeInTheDocument();
+
+  await user.click(screen.getByRole("button", { name: "Save to watchlist" }));
+  expect(screen.getByRole("button", { name: "Saved" })).toBeInTheDocument();
+  expect(
+    screen.getByRole("button", { name: /Saved · 1/ }),
+  ).toBeInTheDocument();
 
   await user.keyboard("{Escape}");
   await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
+
+  await user.click(screen.getByRole("button", { name: /Saved · 1/ }));
+  expect(screen.getByRole("heading", { name: "Saved" })).toBeInTheDocument();
+  expect(screen.getByText("Saving Private Ryan")).toBeInTheDocument();
+  await user.click(screen.getByRole("button", { name: "Remove Saving Private Ryan" }));
+  expect(screen.getByText("Nothing saved yet.")).toBeInTheDocument();
 });
 
 test("the similar tab searches by title and renders matches", async () => {
@@ -89,8 +115,13 @@ test("the similar tab searches by title and renders matches", async () => {
   expect(screen.getByRole("listbox")).toBeInTheDocument();
   await user.click(screen.getByRole("option", { name: "Titanic" }));
 
-  await user.click(screen.getByRole("button", { name: "Find similar movies" }));
+  await user.click(screen.getByRole("button", { name: "Find films" }));
 
   expect(recommendSimilar).toHaveBeenCalledWith("Titanic");
-  expect(await screen.findByText("Titanic")).toBeInTheDocument();
+  expect(
+    await screen.findByRole("heading", { name: "Because you liked Titanic" }),
+  ).toBeInTheDocument();
+  expect(
+    await screen.findByRole("button", { name: /Details for Titanic/ }),
+  ).toBeInTheDocument();
 });

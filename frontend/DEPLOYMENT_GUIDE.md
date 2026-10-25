@@ -13,8 +13,10 @@ This guide will help you deploy your React frontend to GitHub Pages and connect 
 
    ```
    REACT_APP_API_URL=https://phemis.vercel.app
-   REACT_APP_TMDB_API_KEY=REDACTED_TMDB_KEY
    ```
+
+   The frontend never needs a TMDB key: poster URLs are resolved by the
+   backend and returned with each recommendation.
 
 2. **Vercel Configuration (vercel.json)**
 

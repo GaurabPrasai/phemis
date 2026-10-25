@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import PosterArt from "./PosterArt";
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])';
@@ -60,14 +61,17 @@ export default function Watchlist({ items, onClose, onRemove, onOpen }) {
         ref={panelRef}
       >
         <div className="saved-head">
-          <h2 id="saved-title">Saved</h2>
+          <h2 id="saved-title" className="saved-title">
+            Saved
+          </h2>
           <button
             type="button"
-            className="saved-close"
+            className="modal-close"
+            aria-label="Close"
             onClick={onClose}
             ref={closeRef}
           >
-            Close
+            ×
           </button>
         </div>
 
@@ -83,9 +87,9 @@ export default function Watchlist({ items, onClose, onRemove, onOpen }) {
                   aria-label={`Details for ${item.title}`}
                   onClick={() => onOpen(item)}
                 >
-                  <img src={item.poster_url} alt="" />
+                  <PosterArt movie={item} variant="thumb" />
                 </button>
-                <div>
+                <div className="saved-copy">
                   <p className="saved-name">{item.title}</p>
                   {item.year ? <p className="saved-year">{item.year}</p> : null}
                 </div>

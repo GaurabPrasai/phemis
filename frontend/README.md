@@ -1,6 +1,6 @@
 # Movie Recommender React Frontend
 
-This is the frontend for the Movie Recommender System. It's built with React and Bootstrap.
+This is the frontend for Phemis, a mood-led movie recommender built with React and plain CSS.
 
 ## Setup
 
@@ -18,10 +18,11 @@ The app will be available at http://localhost:3000.
 
 ## Features
 
-- Modern, responsive UI built with Bootstrap
-- Movie selection from a dropdown list
-- Display of movie recommendations with posters
-- Error handling and loading states
+- Nine colour-coded mood tiles that open recommendations straight away
+- Refine chips for energy, company and runtime, kept in the URL
+- Similar-movie search with a keyboard-friendly combobox
+- Film details dialog with synopsis and a saved watchlist
+- Responsive layouts, accessible controls and reduced-motion support
 
 ## API Integration
 

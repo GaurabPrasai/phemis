@@ -1,164 +1,136 @@
-# Phemis: A Movie Recommendation System
+# Phemis
 
-Phemis is a machine learning-powered movie recommendation system designed to provide users with personalized movie suggestions based on their preferences. By utilizing advanced content-based filtering techniques and state-of-the-art tools, Phemis ensures precise and relevant recommendations through a seamless and interactive interface.
+**Find a film for how you feel.** Pick a mood, and Phemis suggests ten films that fit it. Or start from a movie you already love and get similar ones.
 
-## System Architecture
-
-### 1. Machine Learning Model
-
-Phemis employs a **content-based filtering algorithm** that analyzes features such as genres, directors, actors, and plot summaries. Using **TF-IDF vectorization**, these features are transformed into numerical vectors, enabling precise similarity calculations via **cosine similarity**. This ensures the model identifies movies that closely match user preferences.
-
-### 2. Web Application
-
-The application is built using a modern tech stack:
-
-- **Backend**: Django REST Framework API
-- **Frontend**: React (Create React App) with hand-written CSS
-- **Data Processing**: Pandas and NumPy
-
-### 3. Model Serialization
-
-The trained machine learning model is serialized using **Pickle**, ensuring fast and efficient deployment. Large model files are managed using **Git LFS** for efficient version control.
+<!-- Live demo: add your link here once the Azure app is up, e.g. https://phemis.azurewebsites.net -->
 
 ## Features
 
-1. **Real-Time Recommendations**: Delivers instant movie suggestions based on user input.
-2. **Scalable Design**: Modular architecture facilitates easy updates and future enhancements.
-3. **Responsive UI**: Modern interface that works on both desktop and mobile devices.
-4. **Movie Posters**: Displays movie posters fetched from TMDB API.
+- **Mood-based picks.** Nine moods (laugh, cozy, need a good cry, romantic, hyped, spooky, mind-bending, adventure, inspired) with refinements for energy, who you are watching with, and runtime.
+- **Similar to a movie.** Search the catalog and get films with a similar feel, using content-based similarity.
+- **Blend both.** Add a movie you loved to a mood search and the results mix mood match with similarity.
+- **Shuffle.** Get a fresh set of ten without repeats.
+- **Film details.** Poster, rating, runtime, genres, synopsis and a short "why it fits" line.
+- **Watchlist.** Save films in your browser.
+- **Shareable state.** Your mood and filters live in the URL, so a refresh or a shared link restores the view.
+- **Responsive and accessible.** Works on phone and desktop, keyboard friendly, respects reduced-motion settings.
 
-## Installation Guide
+## How it works
+
+### Similar movies
+The catalog (about 4,800 popular films, mostly before 2018) is turned into text "tags" per movie (genres, keywords, cast, crew, overview). The tags are vectorised and compared with **cosine similarity**. The result is a precomputed similarity matrix stored as a pickle, so a lookup at request time is a single array read.
+
+### Mood picks
+Mood ranking is plain NumPy, with no LLM and no TMDB call while you browse.
+
+- Each mood has a **profile** in `backend/movies/moods.py`: genre weights, genres to avoid, and keywords.
+- **Energy** (chill, balanced, intense) and **company** (alone, partner, friends, family) adjust those weights. Choosing *family* is a hard filter: Family or Animation only, and no Horror, Thriller, Crime or War.
+- **Score** = 0.55 x genre match + 0.15 x keyword hits + 0.30 x Bayesian-weighted rating, minus 0.5 for an avoided genre. With a seed movie the final score is 0.65 x mood + 0.35 x similarity.
+- **Shuffle** samples ten films from the top 30 candidates, skipping titles you have already seen.
+- Metadata (genres, runtime, rating, poster path, synopsis, keywords) was fetched once from TMDB into `backend/recommender_api/movie_meta.json`, so requests do not call TMDB.
+
+## Tech stack
+
+| Layer | Tools |
+|---|---|
+| Backend | Python 3.10 to 3.12, Django 5, Django REST Framework, pandas, NumPy, WhiteNoise, Gunicorn |
+| Frontend | React 18 (Create React App), plain CSS, axios |
+| Data | TMDB 5000-style movie dataset, TMDB API for metadata |
+| Hosting | Azure App Service (one app serves both the API and the built React site) |
+
+## Getting started
 
 ### Prerequisites
+- Python 3.10 to 3.12
+- Node.js 18 or newer
+- Git with [Git LFS](https://git-lfs.github.com) (the model files are large)
+- A free [TMDB API key](https://www.themoviedb.org/settings/api)
 
-- Python 3.9+ (recommended 3.10 or 3.11)
-- Node.js 14+
-- Git with Git LFS installed
-- TMDB API key
+### 1. Clone and fetch the model files
 
-### Git LFS Setup
+```bash
+git lfs install
+git clone https://github.com/GaurabPrasai/phemis.git
+cd phemis
+git lfs pull
+```
 
-The project uses Git LFS to manage large model files (`.pkl` files). Before cloning the repository, ensure Git LFS is installed:
+Check that `backend/recommender_api/movies.pkl` and `similarity.pkl` are real files (megabytes, not about 130 bytes). If they are tiny text files, see [docs/LFS.md](docs/LFS.md).
 
-1. **Install Git LFS**:
-   - **Windows**: Download from [git-lfs.github.com](https://git-lfs.github.com) or use `winget install -e --id GitHub.GitLFS`
-   - **Mac**: `brew install git-lfs`
-   - **Linux**:
-     ```bash
-     sudo apt-get install git-lfs  # Debian/Ubuntu
-     sudo yum install git-lfs      # CentOS/RHEL
-     ```
-
-2. **Initialize Git LFS**:
-
-   ```bash
-   git lfs install
-   ```
-
-3. **Clone the repository**:
-
-   ```bash
-   git clone https://github.com/gaurabprasai/phemis.git
-   cd phemis
-   ```
-
-4. **Pull LFS files** (if not automatically pulled):
-
-   ```bash
-   git lfs pull
-   ```
-
-   This will download all `.pkl` model files tracked by Git LFS.
-
-   > **If this command doesn't change your pkl pointers to binary files, [checkout here. ](./docs/LFS.md)**
-
-### Backend Setup
-
-1. Navigate to the Django backend directory:
-
-   ```bash
-   cd backend
-   ```
-
-2. Create a virtual environment:
-
-   ```bash
-   python -m venv env
-   ```
-
-3. Activate the virtual environment:
-   - Windows: `.\env\Scripts\activate`
-   - Linux/Mac: `source env/bin/activate`
-
-4. Install dependencies:
-
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-5. Create a `.env` file with your TMDB API key:
-
-   ```
-   TMDB_API_KEY=your_tmdb_api_key_here
-   ```
-
-6. Verify that the model files are present:
-
-   ```bash
-   ls -lh *.pkl  # Should show the actual file sizes, not small pointer files
-   ```
-
-7. Run the development server:
-   ```bash
-   python manage.py runserver
-   ```
-
-### Frontend Setup
-
-1. Navigate to the React frontend directory:
-
-   ```bash
-   cd frontend
-   ```
-
-2. Install dependencies:
-
-   ```bash
-   npm install
-   ```
-
-3. Start the development server:
-   ```bash
-   npm start
-   ```
-
-## API Endpoints
-
-- `GET /api/health/`: Health check endpoint
-- `GET /api/movies/`: Get list of all available movies
-- `POST /api/recommend/`: Get movies similar to a title you already like
-- `GET /api/moods/`: List the mood tiles (slug, label, emoji, blurb)
-- `POST /api/recommend/mood/`: Get movies for a mood (see below)
-
-## Mood recommendations
-
-The home screen asks how you feel and ranks the catalog with plain numpy - no LLM and no TMDB call at request time.
-
-- **Profiles** live in `backend/movies/moods.py`: genre weights, genres to avoid, and keywords. Energy (`chill` / `balanced` / `intense`) and company (`alone` / `partner` / `friends` / `family`) adjust those weights. Watching with family is a hard filter: Family or Animation only, and no Horror, Thriller, Crime or War.
-- **Metadata** (genres, runtime, rating, poster path, overview, keywords) is fetched once into `backend/recommender_api/movie_meta.json` and loaded at startup. Posters come from that file, so requests no longer call TMDB.
-- **Score** = 0.55 x genre match + 0.15 x keyword hits + 0.30 x Bayesian rating - 0.5 for an avoided genre. With a seed movie the final score is `0.65 x mood + 0.35 x similarity`.
-- **Shuffle** samples 10 films from the top 30 candidates, excluding titles already shown, so it never repeats.
-
-Rebuild the metadata only when the catalog changes:
+### 2. Backend
 
 ```bash
 cd backend
-TMDB_API_KEY=your_key python scripts/build_movie_meta.py
+python -m venv venv
+# macOS / Linux:  source venv/bin/activate
+# Windows (Git Bash or MSYS2): use venv/Scripts/python.exe for every command below
+pip install -r requirements.txt
 ```
 
-The script is resumable and skips ids it already has.
+Create `backend/.env` (it is gitignored):
 
-`POST /api/recommend/mood/` accepts:
+```
+TMDB_API_KEY=your_tmdb_key
+```
+
+Run it:
+
+```bash
+python manage.py runserver
+```
+
+The API is now at http://localhost:8000/api/health/. The first start takes a few seconds while the model loads.
+
+### 3. Frontend
+
+In a second terminal:
+
+```bash
+cd frontend
+npm install
+```
+
+Create `frontend/.env.local` so the dev server talks to your local backend:
+
+```
+REACT_APP_API_URL=http://localhost:8000
+```
+
+Then:
+
+```bash
+npm start
+```
+
+Open http://localhost:3000.
+
+### Shortcut
+
+`./start.sh` (from the repo root, in Git Bash or a Unix shell) creates the virtual environment if needed, starts Django on port 8000 and the React dev server on port 3000.
+
+## Environment variables
+
+| Variable | Where | Purpose |
+|---|---|---|
+| `TMDB_API_KEY` | backend | Poster lookups and rebuilding the metadata |
+| `SECRET_KEY` | backend | Django secret (generated once on Azure) |
+| `DEBUG` | backend | `True` by default locally, `False` in production |
+| `ALLOWED_HOSTS`, `CORS_ALLOWED_ORIGINS` | backend | Set automatically by the Azure deploy script |
+| `REACT_APP_API_URL` | frontend | API base URL. Leave empty in production (same origin) |
+
+The frontend never needs a TMDB key. Never put secrets in anything under `frontend/`, because they end up in the public JavaScript.
+
+## API
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/health/` | Health check (`ready: true` once the model is loaded) |
+| GET | `/api/movies/` | All movie titles (used by the search box) |
+| POST | `/api/recommend/` | Movies similar to a title. Body: `{"movie_title": "Avatar"}` |
+| GET | `/api/moods/` | The nine moods (`slug`, `label`, `emoji`, `blurb`) |
+| POST | `/api/recommend/mood/` | Mood-based picks (below) |
+
+`POST /api/recommend/mood/` body (only `mood` is required, unknown moods return 400):
 
 ```json
 {
@@ -172,49 +144,62 @@ The script is resumable and skips ids it already has.
 }
 ```
 
-Only `mood` is required; unknown moods return 400.
+Each result has `movie_id`, `title`, `poster_url`, `year`, `rating`, `runtime`, `genres`, `overview` and `why`.
+
+## Tests
+
+```bash
+cd backend
+python manage.py test movies        # 8 backend tests
+
+cd ../frontend
+npm test -- --watchAll=false        # frontend tests
+npm run build                       # production build
+```
+
+## Deployment
+
+The whole app runs as **one Azure App Service**: Django serves the API and the built React bundle from the same address, so there is no CORS setup and only one process to keep warm.
+
+```bash
+az login
+export TMDB_API_KEY="your_tmdb_key"
+bash backend/azure/azure-deploy.sh
+```
+
+The script is safe to re-run. The first deploy on a new app can take 10 minutes or more while Azure installs the Python packages, and Azure may report a 504 timeout even though the deploy is still running. See [DEPLOYMENT.md](DEPLOYMENT.md) for the full guide, troubleshooting and how to rename the app.
+
+## Rebuilding the movie metadata
+
+Only needed if you change the catalog:
+
+```bash
+cd backend
+TMDB_API_KEY=your_key python scripts/build_movie_meta.py
+```
+
+The script is resumable and skips movies it already has.
 
 ## Troubleshooting
 
-### Git LFS Issues
+- **Model fails to load or the app shows no films.** Check that the `.pkl` files are real files and not Git LFS pointers (see [docs/LFS.md](docs/LFS.md)). If the files are missing entirely, the backend tries to download them from Hugging Face.
+- **Mood endpoints return 503.** `movie_meta.json` is missing or the model did not load. Check the server log.
+- **Frontend cannot reach the API locally.** Make sure the backend is running on port 8000 and `frontend/.env.local` sets `REACT_APP_API_URL=http://localhost:8000`.
+- **`No module named django` on Windows.** Your shell is using a different Python than the project's. Run commands with `venv/Scripts/python.exe`.
 
-If model files appear as small text files (pointer files) instead of actual binary files:
+## Known limits and ideas
 
-1. Ensure Git LFS is installed: `git lfs version`
-2. Re-initialize LFS: `git lfs install`
-3. Pull LFS objects: `git lfs pull`
-4. Verify tracking: `git lfs ls-files`
+- The catalog is about 4,800 films, mostly released before 2018. Newer films would need a live TMDB source blended in.
+- Possible next steps: free-text mood input ("stressed after exams"), user accounts and ratings, collaborative filtering, streaming availability per country.
 
-### Model Loading Errors
+## Credits
 
-If you encounter errors loading `.pkl` files, verify:
+Movie data and posters come from [TMDB](https://www.themoviedb.org). *This product uses the TMDB API but is not endorsed or certified by TMDB.*
 
-- Files were properly downloaded via Git LFS (check file size)
-- Python version compatibility
-- All dependencies are installed
+## Contributing
 
-## Future Roadmap
-
-- **Enhanced Recommendation Algorithms**: Incorporate collaborative filtering for hybrid suggestions.
-- **User Authentication**: Introduce user profiles for a personalized experience.
-- **Expanded Data Sources**: Integrate user reviews and ratings to refine suggestions.
-
-## Contribution
-
-We welcome contributions! To get started:
-
-- Fork the repository.
-- Ensure Git LFS is installed before cloning.
-- Create a feature branch.
-- Submit a pull request with detailed documentation of changes.
+Fork the repo, create a feature branch, and open a pull request describing the change. Please run the backend and frontend tests first.
 
 ## Contact
 
-For questions, feedback, or collaboration opportunities:
-
-- **Email**: Gaurabprasaigp@gmail.com
-- **GitHub**: github.com/gaurabprasai
-
----
-
-Phemis demonstrates the potential of combining machine learning with web technologies to solve real-world problems. Explore the project, and feel free to contribute or adapt it to your needs!
+Gaurab Prasai: [GitHub](https://github.com/GaurabPrasai) · Gaurabprasaigp@gmail.com

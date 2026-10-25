@@ -16,6 +16,11 @@
   font-weight: 700;
   line-height: 1;
   letter-spacing: -0.02em;
+  background: none;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  cursor: pointer;
 }
 
 .brand-dot {
@@ -487,12 +492,10 @@
   content: "";
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    100deg,
-    transparent 20%,
-    rgba(255, 255, 255, 0.04) 50%,
-    transparent 80%
-  );
+  background: linear-gradient(100deg,
+      transparent 20%,
+      rgba(255, 255, 255, 0.04) 50%,
+      transparent 80%);
   transform: translateX(-100%);
   animation: shimmer 1.6s linear infinite;
 }
@@ -873,7 +876,7 @@
   padding: 16px 0;
 }
 
-.saved-item + .saved-item {
+.saved-item+.saved-item {
   border-top: 1px solid var(--border);
 }
 
@@ -925,6 +928,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -934,6 +938,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -944,6 +949,7 @@
     opacity: 0;
     transform: translateY(8px);
   }
+
   to {
     opacity: 1;
     transform: none;
@@ -955,6 +961,7 @@
     opacity: 0;
     transform: translateX(16px);
   }
+
   to {
     opacity: 1;
     transform: none;

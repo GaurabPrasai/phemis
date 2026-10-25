@@ -20,7 +20,7 @@ export MSYS2_ARG_CONV_EXCL="*"
 GROUP="movie-recommender-rg"
 LOCATION="centralindia"
 PLAN_NAME="movie-recommender-plan"
-APP_NAME="movie-recommender-app"
+APP_NAME="phemis"
 SKU="B1"                        # Basic: always-on, 1 core / 1.75 GB. P*v3
                                # quota is 0 on student/free subscriptions.
 PYTHON_RUNTIME="PYTHON:3.12"

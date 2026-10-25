@@ -183,6 +183,18 @@ function App() {
     setSeedOpen(false);
   };
 
+  const goHome = () => {
+    changeMood();
+    setTab("mood");
+    setSimilarSeed("");
+    setSimilarResults(null);
+    setSimilarStatus("idle");
+    setSimilarError("");
+    setModalMovie(null);
+    setWatchlistOpen(false);
+    window.scrollTo({ top: 0 });
+  };
+
   const resetRefine = () => {
     moodRequest.current += 1;
     setEnergy("balanced");
@@ -266,6 +278,7 @@ function App() {
       <Header
         tab={tab}
         onTab={setTab}
+        onHome={goHome}
         savedCount={watchlist.items.length}
         onOpenWatchlist={() => setWatchlistOpen(true)}
         savedOpen={watchlistOpen}

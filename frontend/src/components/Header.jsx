@@ -1,6 +1,7 @@
 export default function Header({
   tab,
   onTab,
+  onHome,
   savedCount,
   onOpenWatchlist,
   savedOpen,
@@ -8,9 +9,14 @@ export default function Header({
   return (
     <header className="header">
       <div className="header-inner">
-        <span className="brand">
+        <button
+          type="button"
+          className="brand"
+          onClick={onHome}
+          aria-label="Phemis, go to the home page"
+        >
           phemis<span className="brand-dot">.</span>
-        </span>
+        </button>
 
         <nav className="header-nav" aria-label="Recommendation mode">
           <button
